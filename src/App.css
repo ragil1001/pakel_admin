@@ -1,0 +1,369 @@
+/* App.css */
+#root {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Admin Layout Styles - FIXED WITH PROPER SPACING */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+.admin-content {
+  flex: 1;
+  margin-left: 256px; /* Width of sidebar when expanded */
+  margin-top: 80px; /* Height of navbar + extra spacing */
+  margin-right: 0; /* REMOVE RIGHT MARGIN TO ALIGN WITH NAVBAR RIGHT-0 */
+  padding: 24px 32px; /* Adjust padding to balance with navbar (left/right symmetric) */
+  background-color: #f8fafc;
+  min-height: calc(100vh - 80px);
+  transition: all 0.3s ease-in-out;
+}
+
+/* Dynamic margin classes for sidebar states */
+.admin-content.collapsed {
+  margin-left: 64px; /* Width of collapsed sidebar */
+  margin-right: 0; /* MAINTAIN NO RIGHT MARGIN */
+}
+
+.admin-content.mobile {
+  margin-left: 0;
+  margin-right: 0; /* NO RIGHT MARGIN ON MOBILE */
+  padding: 16px 24px; /* Symmetric padding for mobile */
+}
+
+.admin-main {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  padding: 32px; /* Slightly reduced for balance, but symmetric left/right */
+  min-height: calc(100vh - 160px);
+  /* Adjusted for new padding */
+  border: 1px solid #e5e7eb;
+  max-width: 100%;
+  overflow: hidden;
+  /* Ensure content doesn't stick to edges */
+  box-sizing: border-box;
+}
+
+/* Responsive Design - IMPROVED WITH PROPER BALANCE */
+@media (max-width: 1024px) {
+  .admin-content {
+    margin-left: 0;
+    margin-right: 80px;
+    padding: 24px 24px; /* Symmetric padding */
+  }
+
+  .admin-content.collapsed {
+    margin-left: 0;
+    margin-right: 0; /* NO RIGHT MARGIN */
+  }
+
+  .admin-main {
+    padding: 24px; /* Balance with navbar */
+    border-radius: 8px;
+    min-height: calc(100vh - 144px);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-content {
+    margin-right: 0; /* No right margin on tablets */
+    padding: 16px 16px; /* Symmetric */
+    margin-top: 76px;
+  }
+
+  .admin-main {
+    padding: 20px;
+    border-radius: 8px;
+    min-height: calc(100vh - 128px);
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-content {
+    margin-right: 0; /* No right margin on small screens */
+    padding: 12px 12px; /* Symmetric minimal padding */
+    margin-top: 72px;
+  }
+
+  .admin-main {
+    padding: 16px;
+    border-radius: 6px;
+    min-height: calc(100vh - 112px);
+  }
+}
+
+/* ALTERNATIVE APPROACH: Add container max-width */
+@media (min-width: 1920px) {
+  .admin-content {
+    max-width: 1600px; /* Prevent content from being too wide on large screens */
+    margin-left: auto; /* Center if needed, but keep left alignment with sidebar */
+    margin-right: auto;
+  }
+}
+
+/* Enhanced Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  border: 2px solid #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+::-webkit-scrollbar-corner {
+  background: #f1f5f9;
+}
+
+/* Smooth transitions */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Button animations */
+.btn-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-hover:active {
+  transform: translateY(0);
+}
+
+/* Card animations */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Table hover effects */
+.table-row-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.table-row-hover:hover {
+  background-color: #f8fafc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Form styling improvements */
+.form-input {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.form-input:hover {
+  border-color: #9ca3af;
+}
+
+/* Notification badge animation */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.notification-badge {
+  animation: pulse 2s infinite;
+}
+
+/* Loading spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Enhanced modal backdrop */
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Status indicators */
+.status-indicator {
+  position: relative;
+  display: inline-block;
+}
+
+.status-indicator::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+/* Enhanced shadows */
+.shadow-soft {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-medium {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.shadow-hard {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Focus states */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* Utility classes */
+.text-balance {
+  text-wrap: balance;
+}
+
+.overflow-fade {
+  mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+}
+
+/* Content spacing utilities */
+.content-spacing > * + * {
+  margin-top: 1.5rem;
+}
+
+.content-spacing-lg > * + * {
+  margin-top: 2rem;
+}
+
+.content-spacing-sm > * + * {
+  margin-top: 1rem;
+}
+
+/* Safe area for mobile devices */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Print styles */
+@media print {
+  .admin-content {
+    margin-left: 0;
+    margin-top: 0;
+    margin-right: 0;
+    padding: 0;
+  }
+
+  .admin-main {
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Dark mode support (if needed) */
+@media (prefers-color-scheme: dark) {
+  .auto-dark {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+
+  .auto-dark .admin-main {
+    background-color: #374151;
+    border-color: #4b5563;
+  }
+}

@@ -1,0 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap");
+@import "react-datepicker/dist/react-datepicker.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.font-inter {
+  font-family: "Inter", sans-serif;
+}
+.font-merriweather {
+  font-family: "Merriweather", serif;
+}
+
+/* Custom styling untuk react-datepicker */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.875rem;
+}
+.react-datepicker__input-container input:focus {
+  outline: none;
+  border-color: #2f855a; /* colorPalette.primary */
+  ring: 2px solid #2f855a;
+}
