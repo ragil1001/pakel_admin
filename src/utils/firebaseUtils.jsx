@@ -115,7 +115,6 @@ export const createUmkm = async (data) => {
     await logActivity("create", "umkm", data.name, docRef.id, {
       description:
         data.description?.substring(0, 100) + "..." || "No description",
-      // category: data.category || "No category",
     });
 
     return { id: docRef.id, ...umkmData };
@@ -166,7 +165,6 @@ export const updateUmkm = async (id, data) => {
     await logActivity("update", "umkm", data.name, id, {
       description:
         data.description?.substring(0, 100) + "..." || "No description",
-      // category: data.category || "No category",
     });
 
     return { id, ...umkmData };
@@ -212,7 +210,6 @@ export const createNews = async (data) => {
     // Log activity
     await logActivity("create", "news", data.title, docRef.id, {
       content: data.content?.substring(0, 100) + "..." || "No content",
-      // category: data.category || "No category",
     });
 
     return { id: docRef.id, ...newsData };
@@ -262,7 +259,6 @@ export const updateNews = async (id, data) => {
     // Log activity
     await logActivity("update", "news", data.title, id, {
       content: data.content?.substring(0, 100) + "..." || "No content",
-      // category: data.category || "No category",
     });
 
     return { id, ...newsData };

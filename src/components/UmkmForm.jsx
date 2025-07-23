@@ -31,6 +31,7 @@ const InputField = React.memo(
     placeholder,
     rows,
     required = true,
+    min,
   }) => (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
@@ -57,6 +58,7 @@ const InputField = React.memo(
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          min={min}
           className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 form-input ${
             error
               ? "border-red-300 bg-red-50"
@@ -81,7 +83,8 @@ const InputField = React.memo(
       prevProps.type === nextProps.type &&
       prevProps.placeholder === nextProps.placeholder &&
       prevProps.rows === nextProps.rows &&
-      prevProps.required === nextProps.required
+      prevProps.required === nextProps.required &&
+      prevProps.min === nextProps.min
     );
   }
 );
@@ -174,7 +177,6 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
     name: "",
     owner: "",
     description: "",
-    price: "",
     image: "",
     whatsapp: "",
     location: "",
@@ -203,7 +205,6 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
         name: umkm.name || "",
         owner: umkm.owner || "",
         description: umkm.description || "",
-        price: umkm.price || "",
         image: umkm.image || "",
         whatsapp: umkm.whatsapp || "",
         location: umkm.location || "",
@@ -225,8 +226,6 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
         "description_required",
         userSettings.language
       );
-    if (!formData.price)
-      newErrors.price = translate("price_required", userSettings.language);
     if (!originalImage && !imageFile)
       newErrors.image = translate("image_required", userSettings.language);
     if (!formData.whatsapp) {
@@ -263,6 +262,11 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
     if (!variantForm.price)
       newErrors.price = translate(
         "variant_price_required",
+        userSettings.language
+      );
+    else if (isNaN(variantForm.price) || variantForm.price <= 0)
+      newErrors.price = translate(
+        "variant_price_invalid",
         userSettings.language
       );
     if (!variantForm.image)
@@ -628,17 +632,6 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <InputField
-                      label={translate("price", userSettings.language)}
-                      name="price"
-                      value={formData.price}
-                      onChange={handleChange}
-                      error={errors.price}
-                      placeholder={translate(
-                        "price_placeholder",
-                        userSettings.language
-                      )}
-                    />
-                    <InputField
                       label={translate("whatsapp", userSettings.language)}
                       name="whatsapp"
                       value={formData.whatsapp}
@@ -649,19 +642,18 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                         userSettings.language
                       )}
                     />
+                    <InputField
+                      label={translate("location", userSettings.language)}
+                      name="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      error={errors.location}
+                      placeholder={translate(
+                        "location_placeholder",
+                        userSettings.language
+                      )}
+                    />
                   </div>
-
-                  <InputField
-                    label={translate("location", userSettings.language)}
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    error={errors.location}
-                    placeholder={translate(
-                      "location_placeholder",
-                      userSettings.language
-                    )}
-                  />
 
                   <InputField
                     label={translate("owner_bio", userSettings.language)}
@@ -733,7 +725,7 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                                 {variant.description}
                               </p>
                               <p className="text-sm font-medium text-emerald-600 mt-2">
-                                {variant.price}
+                                Rp {variant.price}/pcs
                               </p>
                             </div>
                             <button
@@ -791,6 +783,8 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                             value={variantForm.price}
                             onChange={handleVariantChange}
                             error={variantErrors.price}
+                            type="number"
+                            min="0"
                             placeholder={translate(
                               "variant_price_placeholder",
                               userSettings.language

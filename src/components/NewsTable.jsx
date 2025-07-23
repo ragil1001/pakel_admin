@@ -219,7 +219,7 @@ const NewsTable = ({ newsItems, onEdit, onDelete }) => {
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSort("title")}
               >
                 <div className="flex items-center">
@@ -263,7 +263,7 @@ const NewsTable = ({ newsItems, onEdit, onDelete }) => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {translate("image", userSettings.language)}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {translate("actions", userSettings.language)}
               </th>
             </tr>
@@ -326,8 +326,8 @@ const NewsTable = ({ newsItems, onEdit, onDelete }) => {
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center space-x-2">
+                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                  <div className="flex items-center justify-center space-x-2">
                     <motion.button
                       onClick={() => onEdit(news)}
                       className="p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-full transition-colors duration-200"

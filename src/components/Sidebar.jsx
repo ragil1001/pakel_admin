@@ -13,6 +13,7 @@ import {
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../context/AuthContext";
 import { translate } from "../utils/translations";
+import logo from "../assets/logo.png"; // Import the logo image
 
 const Sidebar = () => {
   const location = useLocation();
@@ -92,10 +93,20 @@ const Sidebar = () => {
       <div
         className={`${getSidebarWidth()} bg-gradient-to-b from-slate-800 to-slate-900 shadow-xl h-full fixed left-0 top-0 z-50 transition-all duration-300 ease-in-out ${sidebarTransform}`}
       >
-        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 py-4 border-b border-emerald-500">
+        <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-2 py-4 border-b border-emerald-500">
           <Link to="/dashboard" className="flex items-center">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-emerald-600 font-bold text-xl">P</span>
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center flex-shrink-10">
+                <span className="text-emerald-600 font-bold text-xl">
+                  <img
+                    src={logo}
+                    alt={translate("admin_panel", userSettings.language)}
+                    className={`${
+                      isCollapsed ? "h-8 w-8" : "h-10 w-auto max-w-[150px]"
+                    } object-contain rounded-lg`}
+                  />
+                </span>
+              </div>
             </div>
             <div
               className={`ml-3 transition-all duration-300 ${
@@ -104,17 +115,17 @@ const Sidebar = () => {
                   : "opacity-100"
               }`}
             >
-              <h2 className="text-white font-bold text-lg leading-tight whitespace-nowrap">
+              <h2 className="text-white font-bold text-lg leading-tight whitespace-nowrap ml-2">
                 {translate("admin_panel", userSettings.language)}
               </h2>
-              <p className="text-emerald-100 text-xs whitespace-nowrap">
+              <p className="text-emerald-100 text-xs whitespace-nowrap ml-2">
                 {translate("padukuhan_pakel", userSettings.language)}
               </p>
             </div>
           </Link>
         </div>
 
-        <div className="px-4 py-4 border-b border-slate-700">
+        <div className="px-3 py-4 border-b border-slate-700">
           <div className="flex items-center">
             <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
               <User className="w-6 h-6 text-slate-300" />

@@ -270,7 +270,7 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {translate("image", userSettings.language)}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {translate("actions", userSettings.language)}
               </th>
             </tr>
@@ -334,8 +334,8 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center space-x-2">
+                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                  <div className="flex items-center justify-center space-x-2">
                     <motion.button
                       onClick={() => onEdit(gallery)}
                       className="p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-full transition-colors duration-200"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import { colorPalette } from "../colors";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import UmkmForm from "../components/UmkmForm";
 import SearchBar from "../components/SearchBar";
 import Notification from "../components/Notification";
@@ -11,6 +11,151 @@ import { translate } from "../utils/translations";
 
 const UmkmTable = React.lazy(() => import("../components/UmkmTable"));
 
+const UmkmDetailModal = ({ umkm, onClose, userSettings }) => (
+  <motion.div
+    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.3 }}
+    onClick={onClose}
+  >
+    <motion.div
+      className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl"
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.9, opacity: 0 }}
+      transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-6 relative flex-shrink-0">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+        >
+          <X className="w-5 h-5 text-white" />
+        </button>
+        <h3 className="text-2xl font-bold text-white">
+          {translate("umkm_details", userSettings.language)}
+        </h3>
+        <p className="text-emerald-100 mt-1">
+          {translate("umkm_details_description", userSettings.language)}
+        </p>
+      </div>
+
+      {/* Content - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-8 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-sm font-medium text-gray-700">
+              {translate("product_name", userSettings.language)}
+            </h4>
+            <p className="text-gray-900">{umkm.name || "-"}</p>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-gray-700">
+              {translate("owner", userSettings.language)}
+            </h4>
+            <p className="text-gray-900">{umkm.owner || "-"}</p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-medium text-gray-700">
+            {translate("product_description", userSettings.language)}
+          </h4>
+          <p className="text-gray-900">{umkm.description || "-"}</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-sm font-medium text-gray-700">
+              {translate("whatsapp", userSettings.language)}
+            </h4>
+            <p className="text-gray-900">{umkm.whatsapp || "-"}</p>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-gray-700">
+              {translate("location", userSettings.language)}
+            </h4>
+            <p className="text-gray-900">{umkm.location || "-"}</p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-medium text-gray-700">
+            {translate("owner_bio", userSettings.language)}
+          </h4>
+          <p className="text-gray-900">{umkm.bio || "-"}</p>
+        </div>
+
+        {umkm.image && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700">
+              {translate("product_image", userSettings.language)}
+            </h4>
+            <img
+              src={umkm.image}
+              alt={umkm.name || translate("no_title", userSettings.language)}
+              className="w-48 h-48 object-cover rounded-lg border border-gray-300"
+            />
+          </div>
+        )}
+
+        {umkm.variants && umkm.variants.length > 0 && (
+          <div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+              {translate("product_variants", userSettings.language)}
+            </h4>
+            <div className="space-y-4">
+              {umkm.variants.map((variant) => (
+                <div
+                  key={variant.id}
+                  className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                >
+                  <div className="flex items-start space-x-4">
+                    <img
+                      src={variant.image}
+                      alt={variant.name}
+                      className="w-16 h-16 object-cover rounded-lg border border-gray-300"
+                    />
+                    <div className="flex-1">
+                      <h6 className="font-medium text-gray-900">
+                        {variant.name}
+                      </h6>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {variant.description}
+                      </p>
+                      <p className="text-sm font-medium text-emerald-600 mt-2">
+                        Rp {variant.price}/pcs
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="bg-gray-50 px-8 py-6 border-t border-gray-200 flex-shrink-0">
+        <div className="flex justify-end">
+          <motion.button
+            onClick={onClose}
+            className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {translate("close", userSettings.language)}
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  </motion.div>
+);
+
 const ManageUmkm = () => {
   const { userSettings } = useAuth();
   const [umkms, setUmkms] = useState([]);
@@ -18,6 +163,7 @@ const ManageUmkm = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedUmkm, setSelectedUmkm] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [selectedDetailUmkm, setSelectedDetailUmkm] = useState(null);
 
   useEffect(() => {
     const fetchUmkms = async () => {
@@ -27,10 +173,11 @@ const ManageUmkm = () => {
         setFilteredUmkms(data);
       } catch (error) {
         console.error("Failed to fetch UMKM:", error);
-        // showNotification(
-        //   translate("error_load_umkm", userSettings.language),
-        //   "error"
-        // );
+        setNotification({
+          message: translate("error_load_umkm", userSettings.language),
+          type: "error",
+        });
+        setTimeout(() => setNotification(null), 3000);
       }
     };
     fetchUmkms();
@@ -46,6 +193,14 @@ const ManageUmkm = () => {
     setIsFormOpen(true);
   };
 
+  const handleShowDetails = (umkm) => {
+    setSelectedDetailUmkm(umkm);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedDetailUmkm(null);
+  };
+
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setSelectedUmkm(null);
@@ -56,17 +211,19 @@ const ManageUmkm = () => {
       .then((data) => {
         setUmkms(data);
         setFilteredUmkms(data);
-        // showNotification(
-        //   translate("umkm_saved_success", userSettings.language),
-        //   "success"
-        // );
+        setNotification({
+          message: translate("umkm_saved_success", userSettings.language),
+          type: "success",
+        });
+        setTimeout(() => setNotification(null), 3000);
       })
       .catch((error) => {
         console.error("Failed to refresh UMKM:", error);
-        // showNotification(
-        //   translate("error_refresh_umkm", userSettings.language),
-        //   "error"
-        // );
+        setNotification({
+          message: translate("error_refresh_umkm", userSettings.language),
+          type: "error",
+        });
+        setTimeout(() => setNotification(null), 3000);
       });
     handleCloseForm();
   };
@@ -81,11 +238,6 @@ const ManageUmkm = () => {
       )
     );
   };
-
-  // const showNotification = (message, type) => {
-  //   setNotification({ message, type });
-  //   setTimeout(() => setNotification(null), 3000);
-  // };
 
   return (
     <div className="admin-content">
@@ -159,6 +311,7 @@ const ManageUmkm = () => {
                   umkms={filteredUmkms}
                   onEdit={handleEdit}
                   onDelete={handleSave}
+                  onShowDetails={handleShowDetails}
                 />
               </Suspense>
             </div>
@@ -222,7 +375,6 @@ const ManageUmkm = () => {
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 <Plus className="w-8 h-8 text-gray-400" />
               </div>
-              perbarui
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {translate("no_search_results", userSettings.language)}
               </h3>
@@ -249,6 +401,15 @@ const ManageUmkm = () => {
           umkm={selectedUmkm}
           onSave={handleSave}
           onCancel={handleCloseForm}
+        />
+      )}
+
+      {/* Detail Modal */}
+      {selectedDetailUmkm && (
+        <UmkmDetailModal
+          umkm={selectedDetailUmkm}
+          onClose={handleCloseDetails}
+          userSettings={userSettings}
         />
       )}
     </div>

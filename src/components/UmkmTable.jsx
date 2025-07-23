@@ -8,6 +8,7 @@ import {
   MessageCircle,
   ArrowUp,
   ArrowDown,
+  Info,
 } from "lucide-react";
 import { deleteUmkm } from "../utils/firebaseUtils";
 import Pagination from "./Pagination";
@@ -16,7 +17,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { translate } from "../utils/translations";
 
-const UmkmTable = ({ umkms, onEdit, onDelete }) => {
+const UmkmTable = ({ umkms, onEdit, onDelete, onShowDetails }) => {
   const { userSettings } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({
@@ -69,12 +70,6 @@ const UmkmTable = ({ umkms, onEdit, onDelete }) => {
     );
     const formattedDay = String(date.getDate()).padStart(2, "0");
     return `${dayName}, ${formattedDay} ${monthName} ${date.getFullYear()}`;
-  };
-
-  const formatPrice = (price) => {
-    if (!price) return "";
-    if (price.includes("Rp")) return price;
-    return `Rp ${price}`;
   };
 
   const handleSort = (key) => {
@@ -157,12 +152,6 @@ const UmkmTable = ({ umkms, onEdit, onDelete }) => {
           }
 
           return sortConfig.direction === "asc" ? aDate - bDate : bDate - aDate;
-        } else if (sortConfig.key === "price") {
-          aValue = parseFloat(aValue.replace(/[^0-9.]/g, "")) || 0;
-          bValue = parseFloat(bValue.replace(/[^0-9.]/g, "")) || 0;
-          return sortConfig.direction === "asc"
-            ? aValue - bValue
-            : bValue - aValue;
         } else {
           aValue = aValue ? aValue.toLowerCase() : "";
           bValue = bValue ? bValue.toLowerCase() : "";
@@ -291,20 +280,6 @@ const UmkmTable = ({ umkms, onEdit, onDelete }) => {
                     ))}
                 </div>
               </th>
-              <th
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort("price")}
-              >
-                <div className="flex items-center">
-                  {translate("price", userSettings.language)}
-                  {sortConfig.key === "price" &&
-                    (sortConfig.direction === "asc" ? (
-                      <ArrowUp className="w-4 h-4 ml-1" />
-                    ) : (
-                      <ArrowDown className="w-4 h-4 ml-1" />
-                    ))}
-                </div>
-              </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {translate("variants", userSettings.language)}
               </th>
@@ -325,7 +300,7 @@ const UmkmTable = ({ umkms, onEdit, onDelete }) => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {translate("contact", userSettings.language)}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {translate("actions", userSettings.language)}
               </th>
             </tr>
@@ -379,11 +354,6 @@ const UmkmTable = ({ umkms, onEdit, onDelete }) => {
                   <div className="text-sm text-gray-500">{umkm.bio}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {formatPrice(umkm.price)}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
                     {umkm.variants && umkm.variants.length > 0 ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
@@ -429,8 +399,8 @@ const UmkmTable = ({ umkms, onEdit, onDelete }) => {
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center space-x-2">
+                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                  <div className="flex items-center justify-center space-x-2">
                     <motion.button
                       onClick={() => onEdit(umkm)}
                       className="p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-full transition-colors duration-200"
@@ -439,6 +409,15 @@ const UmkmTable = ({ umkms, onEdit, onDelete }) => {
                       title={translate("edit", userSettings.language)}
                     >
                       <Edit className="w-4 h-4" />
+                    </motion.button>
+                    <motion.button
+                      onClick={() => onShowDetails(umkm)}
+                      className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors duration-200"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      title={translate("details", userSettings.language)}
+                    >
+                      <Info className="w-4 h-4" />
                     </motion.button>
                     <motion.button
                       onClick={() =>
