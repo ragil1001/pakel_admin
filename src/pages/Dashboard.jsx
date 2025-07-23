@@ -1,4 +1,3 @@
-// src/pages/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
@@ -28,9 +27,10 @@ import {
   getActivities,
 } from "../utils/firebaseUtils";
 import { Link } from "react-router-dom";
+import { translate } from "../utils/translations";
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, userSettings } = useAuth();
   const [stats, setStats] = useState({
     umkm: 0,
     news: 0,
@@ -71,7 +71,7 @@ const Dashboard = () => {
     const fetchActivities = async () => {
       setActivitiesLoading(true);
       try {
-        const activities = await getActivities(15); // Get last 15 activities
+        const activities = await getActivities(userSettings.itemsPerPage || 15);
         setRecentActivities(activities);
       } catch (error) {
         console.error("Failed to fetch activities:", error);
@@ -81,7 +81,7 @@ const Dashboard = () => {
     };
 
     fetchActivities();
-  }, []);
+  }, [userSettings.itemsPerPage]);
 
   // Real-time clock update
   useEffect(() => {
@@ -96,7 +96,7 @@ const Dashboard = () => {
   const refreshActivities = async () => {
     setActivitiesLoading(true);
     try {
-      const activities = await getActivities(15);
+      const activities = await getActivities(userSettings.itemsPerPage || 15);
       setRecentActivities(activities);
     } catch (error) {
       console.error("Failed to refresh activities:", error);
@@ -148,47 +148,9 @@ const Dashboard = () => {
     }
   };
 
-  // Get action text in Indonesian
-  const getActionText = (action) => {
-    switch (action) {
-      case "create":
-        return "Membuat";
-      case "update":
-        return "Memperbarui";
-      case "delete":
-        return "Menghapus";
-      case "login":
-        return "Masuk";
-      case "logout":
-        return "Keluar";
-      default:
-        return "Melakukan";
-    }
-  };
-
-  // Get type text in Indonesian
-  const getTypeText = (type) => {
-    switch (type) {
-      case "umkm":
-        return "UMKM";
-      case "news":
-        return "Berita";
-      case "gallery":
-        return "Galeri";
-      case "location":
-        return "Lokasi";
-      case "generalInfo":
-        return "Informasi";
-      case "auth":
-        return "Sistem";
-      default:
-        return type;
-    }
-  };
-
   // Format timestamp
   const formatTimestamp = (timestamp) => {
-    if (!timestamp) return "Baru saja";
+    if (!timestamp) return translate("just_now", userSettings.language);
 
     let date;
     if (timestamp.toDate) {
@@ -205,36 +167,103 @@ const Dashboard = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return "Baru saja";
-    if (diffMins < 60) return `${diffMins} menit yang lalu`;
-    if (diffHours < 24) return `${diffHours} jam yang lalu`;
-    if (diffDays < 7) return `${diffDays} hari yang lalu`;
+    if (diffMins < 1) return translate("just_now", userSettings.language);
+    if (diffMins < 60)
+      return translate("minutes_ago", userSettings.language, {
+        count: diffMins,
+      });
+    if (diffHours < 24)
+      return translate("hours_ago", userSettings.language, {
+        count: diffHours,
+      });
+    if (diffDays < 7)
+      return translate("days_ago", userSettings.language, { count: diffDays });
 
-    return date.toLocaleDateString("id-ID", {
+    const options = {
       day: "numeric",
       month: "short",
       year: "numeric",
-    });
+    };
+    const dateFormat = userSettings.dateFormat || "dd/mm/yyyy";
+    if (dateFormat === "mm/dd/yyyy") {
+      options.month = "numeric";
+      return `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+        date.getDate()
+      ).padStart(2, "0")}/${date.getFullYear()}`;
+    } else if (dateFormat === "yyyy-mm-dd") {
+      options.month = "numeric";
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+    return date.toLocaleDateString(
+      userSettings.language === "id" ? "id-ID" : "en-US",
+      options
+    );
+  };
+
+  // Format current time
+  const formatCurrentTime = () => {
+    const options = {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: userSettings.timeFormat === "12h",
+    };
+    return currentTime.toLocaleTimeString(
+      userSettings.language === "id" ? "id-ID" : "en-US",
+      options
+    );
+  };
+
+  // Format current date
+  const formatCurrentDate = () => {
+    const options = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    const dateFormat = userSettings.dateFormat || "dd/mm/yyyy";
+    if (dateFormat === "mm/dd/yyyy") {
+      options.month = "numeric";
+      return `${String(currentTime.getMonth() + 1).padStart(2, "0")}/${String(
+        currentTime.getDate()
+      ).padStart(2, "0")}/${currentTime.getFullYear()}`;
+    } else if (dateFormat === "yyyy-mm-dd") {
+      options.month = "numeric";
+      return `${currentTime.getFullYear()}-${String(
+        currentTime.getMonth() + 1
+      ).padStart(2, "0")}-${String(currentTime.getDate()).padStart(2, "0")}`;
+    }
+    return currentTime.toLocaleDateString(
+      userSettings.language === "id" ? "id-ID" : "en-US",
+      options
+    );
   };
 
   const quickActions = [
     {
-      title: "Tambah UMKM",
-      description: "Daftarkan UMKM baru",
+      title: translate("add_umkm", userSettings.language),
+      description: translate("add_umkm_description", userSettings.language),
       icon: Plus,
       href: "/dashboard/umkm",
       color: "from-emerald-600 to-emerald-700",
     },
     {
-      title: "Tulis Berita",
-      description: "Buat berita terbaru",
+      title: translate("write_news", userSettings.language),
+      description: translate("write_news_description", userSettings.language),
       icon: Edit,
       href: "/dashboard/news",
       color: "from-blue-600 to-blue-700",
     },
     {
-      title: "Upload Galeri",
-      description: "Tambah foto kegiatan",
+      title: translate("upload_gallery", userSettings.language),
+      description: translate(
+        "upload_gallery_description",
+        userSettings.language
+      ),
       icon: Camera,
       href: "/dashboard/gallery",
       color: "from-purple-600 to-purple-700",
@@ -243,19 +272,19 @@ const Dashboard = () => {
 
   const statCards = [
     {
-      title: "Total UMKM",
+      title: translate("total_umkm", userSettings.language),
       value: stats.umkm,
       icon: Building,
       color: "text-emerald-600 bg-emerald-100",
     },
     {
-      title: "Total Berita",
+      title: translate("total_news", userSettings.language),
       value: stats.news,
       icon: Newspaper,
       color: "text-blue-600 bg-blue-100",
     },
     {
-      title: "Total Galeri",
+      title: translate("total_gallery", userSettings.language),
       value: stats.gallery,
       icon: Camera,
       color: "text-purple-600 bg-purple-100",
@@ -268,7 +297,9 @@ const Dashboard = () => {
         <div className="admin-main">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-            <span className="ml-2 text-gray-600">Memuat dashboard...</span>
+            <span className="ml-2 text-gray-600">
+              {translate("loading_dashboard", userSettings.language)}
+            </span>
           </div>
         </div>
       </div>
@@ -292,30 +323,21 @@ const Dashboard = () => {
               </div>
               <div className="ml-4">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Selamat Datang, Admin!
+                  {translate("welcome_admin", userSettings.language)}
                 </h1>
                 <p className="text-sm text-gray-600 mt-1">
-                  Panel admin Padukuhan Pakel - {user?.email}
+                  {translate("admin_panel_description", userSettings.language, {
+                    email: user?.email,
+                  })}
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">
-                {currentTime.toLocaleDateString("id-ID", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
+              <p className="text-sm text-gray-500">{formatCurrentDate()}</p>
               <div className="flex items-center justify-end mt-1">
                 <Clock className="w-4 h-4 text-emerald-500 mr-1" />
                 <span className="text-sm text-emerald-600 font-medium font-mono">
-                  {currentTime.toLocaleTimeString("id-ID", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  })}
+                  {formatCurrentTime()}
                 </span>
               </div>
             </div>
@@ -355,7 +377,7 @@ const Dashboard = () => {
             <div className="flex items-center mb-4">
               <TrendingUp className="w-5 h-5 text-emerald-600 mr-2" />
               <h2 className="text-lg font-semibold text-gray-900">
-                Aksi Cepat
+                {translate("quick_actions", userSettings.language)}
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -393,7 +415,7 @@ const Dashboard = () => {
               <div className="flex items-center">
                 <Activity className="w-5 h-5 text-blue-600 mr-2" />
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Log Aktivitas Terbaru
+                  {translate("recent_activity_log", userSettings.language)}
                 </h2>
               </div>
               <button
@@ -406,7 +428,7 @@ const Dashboard = () => {
                     activitiesLoading ? "animate-spin" : ""
                   }`}
                 />
-                Refresh
+                {translate("refresh", userSettings.language)}
               </button>
             </div>
 
@@ -415,7 +437,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                   <span className="ml-2 text-gray-600">
-                    Memuat aktivitas...
+                    {translate("loading_activities", userSettings.language)}
                   </span>
                 </div>
               ) : recentActivities.length > 0 ? (
@@ -443,8 +465,14 @@ const Dashboard = () => {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <p className="text-sm font-medium text-gray-900">
-                              {getActionText(activity.action)}{" "}
-                              {getTypeText(activity.type)}
+                              {translate(
+                                `action_${activity.action}`,
+                                userSettings.language
+                              )}{" "}
+                              {translate(
+                                `type_${activity.type}`,
+                                userSettings.language
+                              )}
                             </p>
                             <p className="text-sm text-gray-600 mt-0.5 truncate">
                               {activity.itemName}
@@ -485,10 +513,10 @@ const Dashboard = () => {
                 <div className="text-center py-8">
                   <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500 mb-2">
-                    Belum ada aktivitas yang tercatat
+                    {translate("no_activities", userSettings.language)}
                   </p>
                   <p className="text-xs text-gray-400">
-                    Aktivitas akan muncul saat Anda mulai mengelola konten
+                    {translate("no_activities_message", userSettings.language)}
                   </p>
                 </div>
               )}
@@ -498,14 +526,16 @@ const Dashboard = () => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">
-                    Menampilkan {recentActivities.length} aktivitas terbaru
+                    {translate("showing_activities", userSettings.language, {
+                      count: recentActivities.length,
+                    })}
                   </span>
                   <Link
                     to="/dashboard/activities"
                     className="text-blue-600 hover:text-blue-700 font-medium flex items-center"
                   >
                     <Eye className="w-4 h-4 mr-1" />
-                    Lihat Semua
+                    {translate("view_all", userSettings.language)}
                   </Link>
                 </div>
               </div>

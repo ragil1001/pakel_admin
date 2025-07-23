@@ -6,10 +6,13 @@ import NewsForm from "../components/NewsForm";
 import SearchBar from "../components/SearchBar";
 import Notification from "../components/Notification";
 import { getNews } from "../utils/firebaseUtils";
+import { useAuth } from "../context/AuthContext";
+import { translate } from "../utils/translations";
 
 const NewsTable = React.lazy(() => import("../components/NewsTable"));
 
 const ManageNews = () => {
+  const { userSettings } = useAuth();
   const [newsItems, setNewsItems] = useState([]);
   const [filteredNewsItems, setFilteredNewsItems] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -24,11 +27,14 @@ const ManageNews = () => {
         setFilteredNewsItems(data);
       } catch (error) {
         console.error("Failed to fetch News:", error);
-        showNotification("Gagal memuat berita.", "error");
+        // showNotification(
+        //   translate("error_load_news", userSettings.language),
+        //   "error"
+        // );
       }
     };
     fetchNews();
-  }, []);
+  }, [userSettings.language]);
 
   const handleAdd = () => {
     setSelectedNews(null);
@@ -50,11 +56,17 @@ const ManageNews = () => {
       .then((data) => {
         setNewsItems(data);
         setFilteredNewsItems(data);
-        showNotification("Berita berhasil disimpan.", "success");
+        // showNotification(
+        //   translate("news_saved_success", userSettings.language),
+        //   "success"
+        // );
       })
       .catch((error) => {
         console.error("Failed to refresh News:", error);
-        showNotification("Gagal menyegarkan berita.", "error");
+        // showNotification(
+        //   translate("error_refresh_news", userSettings.language),
+        //   "error"
+        // );
       });
     handleCloseForm();
   };
@@ -70,10 +82,10 @@ const ManageNews = () => {
     );
   };
 
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
+  // const showNotification = (message, type) => {
+  //   setNotification({ message, type });
+  //   setTimeout(() => setNotification(null), 3000);
+  // };
 
   return (
     <div className="admin-content">
@@ -103,10 +115,10 @@ const ManageNews = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Kelola Berita
+                {translate("manage_news", userSettings.language)}
               </h1>
               <p className="text-sm text-gray-600 mt-1">
-                Manajemen berita Padukuhan Pakel
+                {translate("manage_news_description", userSettings.language)}
               </p>
             </div>
             <motion.button
@@ -116,14 +128,17 @@ const ManageNews = () => {
               whileTap={{ scale: 0.98 }}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Tambah Berita
+              {translate("add_news", userSettings.language)}
             </motion.button>
           </div>
 
           {/* Search Bar and Additional Add Button (when data exists) */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="max-w-md">
-              <SearchBar onSearch={handleSearch} placeholder="Cari berita..." />
+              <SearchBar
+                onSearch={handleSearch}
+                placeholder={translate("search_news", userSettings.language)}
+              />
             </div>
           </div>
 
@@ -134,7 +149,9 @@ const ManageNews = () => {
                 fallback={
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-                    <span className="ml-2 text-gray-600">Memuat data...</span>
+                    <span className="ml-2 text-gray-600">
+                      {translate("loading_data", userSettings.language)}
+                    </span>
                   </div>
                 }
               >
@@ -162,7 +179,7 @@ const ManageNews = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Tambah Berita Baru
+                {translate("add_new_news", userSettings.language)}
               </motion.button>
             </motion.div>
           )}
@@ -178,10 +195,10 @@ const ManageNews = () => {
                 <Plus className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Belum ada data berita
+                {translate("no_news_data", userSettings.language)}
               </h3>
               <p className="text-gray-500 mb-4">
-                Mulai dengan menambahkan berita pertama Anda
+                {translate("no_news_data_message", userSettings.language)}
               </p>
               <motion.button
                 onClick={handleAdd}
@@ -190,7 +207,7 @@ const ManageNews = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah Berita
+                {translate("add_news", userSettings.language)}
               </motion.button>
             </motion.div>
           )}
@@ -206,10 +223,10 @@ const ManageNews = () => {
                 <Plus className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Tidak ada hasil pencarian
+                {translate("no_search_results", userSettings.language)}
               </h3>
               <p className="text-gray-500 mb-4">
-                Coba ubah kata kunci pencarian Anda
+                {translate("no_search_results_message", userSettings.language)}
               </p>
               <motion.button
                 onClick={handleAdd}
@@ -218,7 +235,7 @@ const ManageNews = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah Berita Baru
+                {translate("add_new_news", userSettings.language)}
               </motion.button>
             </motion.div>
           )}

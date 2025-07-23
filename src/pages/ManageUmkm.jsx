@@ -6,10 +6,13 @@ import UmkmForm from "../components/UmkmForm";
 import SearchBar from "../components/SearchBar";
 import Notification from "../components/Notification";
 import { getUmkms } from "../utils/firebaseUtils";
+import { useAuth } from "../context/AuthContext";
+import { translate } from "../utils/translations";
 
 const UmkmTable = React.lazy(() => import("../components/UmkmTable"));
 
 const ManageUmkm = () => {
+  const { userSettings } = useAuth();
   const [umkms, setUmkms] = useState([]);
   const [filteredUmkms, setFilteredUmkms] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -24,11 +27,14 @@ const ManageUmkm = () => {
         setFilteredUmkms(data);
       } catch (error) {
         console.error("Failed to fetch UMKM:", error);
-        showNotification("Gagal memuat UMKM.", "error");
+        // showNotification(
+        //   translate("error_load_umkm", userSettings.language),
+        //   "error"
+        // );
       }
     };
     fetchUmkms();
-  }, []);
+  }, [userSettings.language]);
 
   const handleAdd = () => {
     setSelectedUmkm(null);
@@ -50,11 +56,17 @@ const ManageUmkm = () => {
       .then((data) => {
         setUmkms(data);
         setFilteredUmkms(data);
-        showNotification("UMKM berhasil disimpan.", "success");
+        // showNotification(
+        //   translate("umkm_saved_success", userSettings.language),
+        //   "success"
+        // );
       })
       .catch((error) => {
         console.error("Failed to refresh UMKM:", error);
-        showNotification("Gagal menyegarkan UMKM.", "error");
+        // showNotification(
+        //   translate("error_refresh_umkm", userSettings.language),
+        //   "error"
+        // );
       });
     handleCloseForm();
   };
@@ -70,10 +82,10 @@ const ManageUmkm = () => {
     );
   };
 
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
+  // const showNotification = (message, type) => {
+  //   setNotification({ message, type });
+  //   setTimeout(() => setNotification(null), 3000);
+  // };
 
   return (
     <div className="admin-content">
@@ -102,9 +114,11 @@ const ManageUmkm = () => {
           {/* Page Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Kelola UMKM</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {translate("manage_umkm", userSettings.language)}
+              </h1>
               <p className="text-sm text-gray-600 mt-1">
-                Manajemen data UMKM Padukuhan Pakel
+                {translate("manage_umkm_description", userSettings.language)}
               </p>
             </div>
             <motion.button
@@ -114,14 +128,17 @@ const ManageUmkm = () => {
               whileTap={{ scale: 0.98 }}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Tambah UMKM
+              {translate("add_umkm", userSettings.language)}
             </motion.button>
           </div>
 
           {/* Search Bar and Additional Add Button (when data exists) */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="max-w-md">
-              <SearchBar onSearch={handleSearch} placeholder="Cari UMKM..." />
+              <SearchBar
+                onSearch={handleSearch}
+                placeholder={translate("search_umkm", userSettings.language)}
+              />
             </div>
           </div>
 
@@ -132,7 +149,9 @@ const ManageUmkm = () => {
                 fallback={
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-                    <span className="ml-2 text-gray-600">Memuat data...</span>
+                    <span className="ml-2 text-gray-600">
+                      {translate("loading_data", userSettings.language)}
+                    </span>
                   </div>
                 }
               >
@@ -160,7 +179,7 @@ const ManageUmkm = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Tambah UMKM Baru
+                {translate("add_new_umkm", userSettings.language)}
               </motion.button>
             </motion.div>
           )}
@@ -176,10 +195,10 @@ const ManageUmkm = () => {
                 <Plus className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Belum ada data UMKM
+                {translate("no_umkm_data", userSettings.language)}
               </h3>
               <p className="text-gray-500 mb-4">
-                Mulai dengan menambahkan UMKM pertama Anda
+                {translate("no_umkm_data_message", userSettings.language)}
               </p>
               <motion.button
                 onClick={handleAdd}
@@ -188,7 +207,7 @@ const ManageUmkm = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah UMKM
+                {translate("add_umkm", userSettings.language)}
               </motion.button>
             </motion.div>
           )}
@@ -203,11 +222,12 @@ const ManageUmkm = () => {
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 <Plus className="w-8 h-8 text-gray-400" />
               </div>
+              perbarui
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Tidak ada hasil pencarian
+                {translate("no_search_results", userSettings.language)}
               </h3>
               <p className="text-gray-500 mb-4">
-                Coba ubah kata kunci pencarian Anda
+                {translate("no_search_results_message", userSettings.language)}
               </p>
               <motion.button
                 onClick={handleAdd}
@@ -216,7 +236,7 @@ const ManageUmkm = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah UMKM Baru
+                {translate("add_new_umkm", userSettings.language)}
               </motion.button>
             </motion.div>
           )}

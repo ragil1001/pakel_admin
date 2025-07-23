@@ -5,7 +5,7 @@
   padding: 0;
   text-align: left;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: #f8fafc !important;
 }
 
 .logo {
@@ -43,68 +43,216 @@
 }
 
 .read-the-docs {
-  color: #888;
+  color: #888 !important;
 }
 
-/* Admin Layout Styles - FIXED WITH PROPER SPACING */
+/* Admin Layout Styles */
 .admin-layout {
   display: flex;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: #f8fafc !important;
 }
 
 .admin-content {
   flex: 1;
-  margin-left: 256px; /* Width of sidebar when expanded */
-  margin-top: 80px; /* Height of navbar + extra spacing */
-  margin-right: 0; /* REMOVE RIGHT MARGIN TO ALIGN WITH NAVBAR RIGHT-0 */
-  padding: 24px 32px; /* Adjust padding to balance with navbar (left/right symmetric) */
-  background-color: #f8fafc;
+  margin-left: 256px;
+  margin-top: 80px;
+  margin-right: 0;
+  padding: 24px 32px;
+  background-color: #f8fafc !important;
   min-height: calc(100vh - 80px);
   transition: all 0.3s ease-in-out;
 }
 
-/* Dynamic margin classes for sidebar states */
 .admin-content.collapsed {
-  margin-left: 64px; /* Width of collapsed sidebar */
-  margin-right: 0; /* MAINTAIN NO RIGHT MARGIN */
+  margin-left: 64px;
+  margin-right: 0;
 }
 
 .admin-content.mobile {
   margin-left: 0;
-  margin-right: 0; /* NO RIGHT MARGIN ON MOBILE */
-  padding: 16px 24px; /* Symmetric padding for mobile */
+  margin-right: 0;
+  padding: 16px 24px;
 }
 
 .admin-main {
-  background-color: white;
+  background-color: white !important;
   border-radius: 12px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  padding: 32px; /* Slightly reduced for balance, but symmetric left/right */
+  padding: 32px;
   min-height: calc(100vh - 160px);
-  /* Adjusted for new padding */
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5e7eb !important;
   max-width: 100%;
   overflow: hidden;
-  /* Ensure content doesn't stick to edges */
   box-sizing: border-box;
 }
 
-/* Responsive Design - IMPROVED WITH PROPER BALANCE */
+/* Navbar */
+nav {
+  background-color: white !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+nav h1 {
+  color: #1f2937 !important;
+}
+
+nav p {
+  color: #6b7280 !important;
+}
+
+nav button:hover {
+  background-color: #f3f4f6 !important;
+}
+
+nav .text-gray-700 {
+  color: #374151 !important;
+}
+
+nav .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+nav .text-red-600 {
+  color: #dc2626 !important;
+}
+
+nav .hover\:bg-gray-100:hover {
+  background-color: #f3f4f6 !important;
+}
+
+nav .hover\:bg-red-50:hover {
+  background-color: #fef2f2 !important;
+}
+
+/* AdminSettings */
+.bg-gray-50 {
+  background-color: #f9fafb !important;
+}
+
+.text-gray-900 {
+  color: #1f2937 !important;
+}
+
+.text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.bg-blue-600 {
+  background-color: #2563eb !important;
+}
+
+.bg-blue-600:hover {
+  background-color: #1d4ed8 !important;
+}
+
+.bg-gray-600 {
+  background-color: #4b5563 !important;
+}
+
+.bg-gray-600:hover {
+  background-color: #374151 !important;
+}
+
+.bg-blue-700 {
+  background-color: #1d4ed8 !important;
+}
+
+.bg-gray-700 {
+  background-color: #374151 !important;
+}
+
+.border-gray-200 {
+  border-color: #e5e7eb !important;
+}
+
+.border-gray-300 {
+  border-color: #d1d5db !important;
+}
+
+.bg-blue-50 {
+  background-color: #eff6ff !important;
+}
+
+.border-blue-200 {
+  border-color: #bfdbfe !important;
+}
+
+.text-blue-800 {
+  color: #1e40af !important;
+}
+
+.text-blue-700 {
+  color: #1d4ed8 !important;
+}
+
+.text-blue-400 {
+  color: #60a5fa !important;
+}
+
+.text-green-600 {
+  color: #16a34a !important;
+}
+
+/* Lucide Icons */
+.lucide {
+  stroke: currentColor !important;
+}
+
+/* Inputs and Selects */
+select,
+input[type="number"] {
+  background-color: white !important;
+  color: #1f2937 !important;
+  border-color: #d1d5db !important;
+}
+
+select:focus,
+input[type="number"]:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+}
+
+/* Toastify */
+.Toastify__toast {
+  background-color: white !important;
+  color: #1f2937 !important;
+}
+
+.Toastify__toast--success {
+  background-color: #10b981 !important;
+  color: white !important;
+}
+
+.Toastify__toast--error {
+  background-color: #dc2626 !important;
+  color: white !important;
+}
+
+.Toastify__toast--info {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+
+/* Responsive Design */
 @media (max-width: 1024px) {
   .admin-content {
     margin-left: 0;
     margin-right: 80px;
-    padding: 24px 24px; /* Symmetric padding */
+    padding: 24px 24px;
   }
 
   .admin-content.collapsed {
     margin-left: 0;
-    margin-right: 0; /* NO RIGHT MARGIN */
+    margin-right: 0;
   }
 
   .admin-main {
-    padding: 24px; /* Balance with navbar */
+    padding: 24px;
     border-radius: 8px;
     min-height: calc(100vh - 144px);
   }
@@ -112,8 +260,8 @@
 
 @media (max-width: 768px) {
   .admin-content {
-    margin-right: 0; /* No right margin on tablets */
-    padding: 16px 16px; /* Symmetric */
+    margin-right: 0;
+    padding: 16px 16px;
     margin-top: 76px;
   }
 
@@ -126,8 +274,8 @@
 
 @media (max-width: 640px) {
   .admin-content {
-    margin-right: 0; /* No right margin on small screens */
-    padding: 12px 12px; /* Symmetric minimal padding */
+    margin-right: 0;
+    padding: 12px 12px;
     margin-top: 72px;
   }
 
@@ -138,11 +286,10 @@
   }
 }
 
-/* ALTERNATIVE APPROACH: Add container max-width */
 @media (min-width: 1920px) {
   .admin-content {
-    max-width: 1600px; /* Prevent content from being too wide on large screens */
-    margin-left: auto; /* Center if needed, but keep left alignment with sidebar */
+    max-width: 1600px;
+    margin-left: auto;
     margin-right: auto;
   }
 }
@@ -154,22 +301,21 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
+  background: #f1f5f9 !important;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #cbd5e1 !important;
   border-radius: 4px;
-  border: 2px solid #f1f5f9;
+  border: 2px solid #f1f5f9 !important;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #94a3b8 !important;
 }
 
 ::-webkit-scrollbar-corner {
-  background: #f1f5f9;
+  background: #f1f5f9 !important;
 }
 
 /* Smooth transitions */
@@ -207,14 +353,13 @@
 }
 
 .table-row-hover:hover {
-  background-color: #f8fafc;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background-color: #f8fafc !important;
 }
 
 /* Form styling improvements */
 .form-input {
   transition: all 0.2s ease-in-out;
-  border: 1px solid #d1d5db;
+  border: 1px solid #d1d5db !important;
   border-radius: 8px;
   padding: 12px 16px;
   font-size: 14px;
@@ -222,12 +367,12 @@
 
 .form-input:focus {
   outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
 }
 
 .form-input:hover {
-  border-color: #9ca3af;
+  border-color: #9ca3af !important;
 }
 
 /* Notification badge animation */
@@ -264,7 +409,7 @@
 /* Enhanced modal backdrop */
 .modal-backdrop {
   backdrop-filter: blur(4px);
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Status indicators */
@@ -280,9 +425,9 @@
   right: 0;
   width: 8px;
   height: 8px;
-  background-color: #10b981;
+  background-color: #10b981 !important;
   border-radius: 50%;
-  border: 2px solid white;
+  border: 2px solid white !important;
 }
 
 /* Enhanced shadows */
@@ -301,7 +446,7 @@
 /* Focus states */
 .focus-ring:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
 }
 
 /* Utility classes */
@@ -352,18 +497,5 @@
 
   .no-print {
     display: none !important;
-  }
-}
-
-/* Dark mode support (if needed) */
-@media (prefers-color-scheme: dark) {
-  .auto-dark {
-    background-color: #1f2937;
-    color: #f9fafb;
-  }
-
-  .auto-dark .admin-main {
-    background-color: #374151;
-    border-color: #4b5563;
   }
 }

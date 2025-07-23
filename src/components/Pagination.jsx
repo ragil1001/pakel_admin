@@ -2,36 +2,34 @@ import React from "react";
 import { motion } from "framer-motion";
 import { colorPalette } from "../colors";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { translate } from "../utils/translations";
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  // Generate page numbers to display
+  const { userSettings } = useAuth();
+
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 7;
 
     if (totalPages <= maxVisiblePages) {
-      // Show all pages if total is less than max visible
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Show first page, current page range, and last page with ellipsis
       if (currentPage <= 3) {
-        // Show first 5 pages + ellipsis + last page
         for (let i = 1; i <= 5; i++) {
           pages.push(i);
         }
         pages.push("ellipsis");
         pages.push(totalPages);
       } else if (currentPage >= totalPages - 2) {
-        // Show first page + ellipsis + last 5 pages
         pages.push(1);
         pages.push("ellipsis");
         for (let i = totalPages - 4; i <= totalPages; i++) {
           pages.push(i);
         }
       } else {
-        // Show first page + ellipsis + current range + ellipsis + last page
         pages.push(1);
         pages.push("ellipsis");
         for (let i = currentPage - 1; i <= currentPage + 1; i++) {
@@ -62,7 +60,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         whileTap={currentPage === 1 ? {} : { scale: 0.98 }}
       >
         <ChevronLeft className="w-4 h-4 mr-1" />
-        <span className="hidden sm:inline">Previous</span>
+        <span className="hidden sm:inline">
+          {translate("previous", userSettings.language)}
+        </span>
       </motion.button>
 
       {/* Page Numbers */}
@@ -113,7 +113,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         whileHover={currentPage === totalPages ? {} : { scale: 1.02 }}
         whileTap={currentPage === totalPages ? {} : { scale: 0.98 }}
       >
-        <span className="hidden sm:inline">Next</span>
+        <span className="hidden sm:inline">
+          {translate("next", userSettings.language)}
+        </span>
         <ChevronRight className="w-4 h-4 ml-1" />
       </motion.button>
     </div>

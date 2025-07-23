@@ -24,8 +24,11 @@ import {
 } from "lucide-react";
 import { getActivities } from "../utils/firebaseUtils";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { translate } from "../utils/translations";
 
 const ActivityLog = () => {
+  const { userSettings } = useAuth();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filteredActivities, setFilteredActivities] = useState([]);
@@ -33,14 +36,14 @@ const ActivityLog = () => {
   const [filterType, setFilterType] = useState("all");
   const [filterAction, setFilterAction] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [activitiesPerPage] = useState(20);
+  const activitiesPerPage = userSettings.itemsPerPage || 20;
 
   // Fetch activities
   useEffect(() => {
     const fetchActivities = async () => {
       setLoading(true);
       try {
-        const activityData = await getActivities(100); // Get more activities for full log
+        const activityData = await getActivities(100);
         setActivities(activityData);
         setFilteredActivities(activityData);
       } catch (error) {
@@ -138,47 +141,9 @@ const ActivityLog = () => {
     }
   };
 
-  // Get action text in Indonesian
-  const getActionText = (action) => {
-    switch (action) {
-      case "create":
-        return "Membuat";
-      case "update":
-        return "Memperbarui";
-      case "delete":
-        return "Menghapus";
-      case "login":
-        return "Masuk";
-      case "logout":
-        return "Keluar";
-      default:
-        return "Melakukan";
-    }
-  };
-
-  // Get type text in Indonesian
-  const getTypeText = (type) => {
-    switch (type) {
-      case "umkm":
-        return "UMKM";
-      case "news":
-        return "Berita";
-      case "gallery":
-        return "Galeri";
-      case "location":
-        return "Lokasi";
-      case "generalInfo":
-        return "Informasi";
-      case "auth":
-        return "Sistem";
-      default:
-        return type;
-    }
-  };
-
   // Format timestamp
   const formatTimestamp = (timestamp) => {
-    if (!timestamp) return "Tidak diketahui";
+    if (!timestamp) return translate("unknown_time", userSettings.language);
 
     let date;
     if (timestamp.toDate) {
@@ -189,14 +154,41 @@ const ActivityLog = () => {
       date = new Date(timestamp);
     }
 
-    return date.toLocaleString("id-ID", {
+    const dateOptions = {
       weekday: "long",
       year: "numeric",
-      month: "long",
+      month: userSettings.dateFormat === "yyyy-mm-dd" ? "numeric" : "long",
       day: "numeric",
+    };
+    const timeOptions = {
       hour: "2-digit",
       minute: "2-digit",
-    });
+      hour12: userSettings.timeFormat === "12h",
+    };
+
+    let formattedDate;
+    const dateFormat = userSettings.dateFormat || "dd/mm/yyyy";
+    if (dateFormat === "mm/dd/yyyy") {
+      formattedDate = `${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+        date.getDate()
+      ).padStart(2, "0")}/${date.getFullYear()}`;
+    } else if (dateFormat === "yyyy-mm-dd") {
+      formattedDate = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    } else {
+      formattedDate = date.toLocaleDateString(
+        userSettings.language === "id" ? "id-ID" : "en-US",
+        dateOptions
+      );
+    }
+
+    const formattedTime = date.toLocaleTimeString(
+      userSettings.language === "id" ? "id-ID" : "en-US",
+      timeOptions
+    );
+
+    return `${formattedDate}, ${formattedTime}`;
   };
 
   // Pagination
@@ -216,7 +208,9 @@ const ActivityLog = () => {
         <div className="admin-main">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-600">Memuat log aktivitas...</span>
+            <span className="ml-2 text-gray-600">
+              {translate("loading_activity_log", userSettings.language)}
+            </span>
           </div>
         </div>
       </div>
@@ -244,10 +238,10 @@ const ActivityLog = () => {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 flex items-center">
                   <Activity className="w-6 h-6 mr-3 text-blue-600" />
-                  Log Aktivitas
+                  {translate("activity_log", userSettings.language)}
                 </h1>
                 <p className="text-sm text-gray-600 mt-1">
-                  Riwayat semua aktivitas admin di sistem
+                  {translate("activity_log_description", userSettings.language)}
                 </p>
               </div>
             </div>
@@ -259,7 +253,7 @@ const ActivityLog = () => {
               <RefreshCw
                 className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
               />
-              Refresh
+              {translate("refresh", userSettings.language)}
             </button>
           </div>
 
@@ -267,13 +261,13 @@ const ActivityLog = () => {
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
             {[
               {
-                title: "Total Aktivitas",
+                title: translate("total_activities", userSettings.language),
                 value: activities.length,
                 icon: Activity,
                 color: "text-blue-600",
               },
               {
-                title: "Hari Ini",
+                title: translate("today", userSettings.language),
                 value: activities.filter((activity) => {
                   if (!activity.timestamp) return false;
                   let date;
@@ -291,19 +285,19 @@ const ActivityLog = () => {
                 color: "text-green-600",
               },
               {
-                title: "Dibuat",
+                title: translate("action_create", userSettings.language),
                 value: activities.filter((a) => a.action === "create").length,
                 icon: Plus,
                 color: "text-emerald-600",
               },
               {
-                title: "Diperbarui",
+                title: translate("action_update", userSettings.language),
                 value: activities.filter((a) => a.action === "update").length,
                 icon: Edit,
                 color: "text-blue-600",
               },
               {
-                title: "Dihapus",
+                title: translate("action_delete", userSettings.language),
                 value: activities.filter((a) => a.action === "delete").length,
                 icon: Trash2,
                 color: "text-red-600",
@@ -338,7 +332,10 @@ const ActivityLog = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Cari berdasarkan nama item atau email admin..."
+                    placeholder={translate(
+                      "search_placeholder",
+                      userSettings.language
+                    )}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -352,13 +349,27 @@ const ActivityLog = () => {
                 onChange={(e) => setFilterType(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">Semua Tipe</option>
-                <option value="umkm">UMKM</option>
-                <option value="news">Berita</option>
-                <option value="gallery">Galeri</option>
-                <option value="location">Lokasi</option>
-                <option value="generalInfo">Informasi</option>
-                <option value="auth">Sistem</option>
+                <option value="all">
+                  {translate("all_types", userSettings.language)}
+                </option>
+                <option value="umkm">
+                  {translate("type_umkm", userSettings.language)}
+                </option>
+                <option value="news">
+                  {translate("type_news", userSettings.language)}
+                </option>
+                <option value="gallery">
+                  {translate("type_gallery", userSettings.language)}
+                </option>
+                <option value="location">
+                  {translate("type_location", userSettings.language)}
+                </option>
+                <option value="generalInfo">
+                  {translate("type_generalInfo", userSettings.language)}
+                </option>
+                <option value="auth">
+                  {translate("type_auth", userSettings.language)}
+                </option>
               </select>
 
               {/* Action Filter */}
@@ -367,12 +378,24 @@ const ActivityLog = () => {
                 onChange={(e) => setFilterAction(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">Semua Aksi</option>
-                <option value="create">Membuat</option>
-                <option value="update">Memperbarui</option>
-                <option value="delete">Menghapus</option>
-                <option value="login">Masuk</option>
-                <option value="logout">Keluar</option>
+                <option value="all">
+                  {translate("all_actions", userSettings.language)}
+                </option>
+                <option value="create">
+                  {translate("action_create", userSettings.language)}
+                </option>
+                <option value="update">
+                  {translate("action_update", userSettings.language)}
+                </option>
+                <option value="delete">
+                  {translate("action_delete", userSettings.language)}
+                </option>
+                <option value="login">
+                  {translate("action_login", userSettings.language)}
+                </option>
+                <option value="logout">
+                  {translate("action_logout", userSettings.language)}
+                </option>
               </select>
             </div>
           </div>
@@ -382,10 +405,17 @@ const ActivityLog = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  Daftar Aktivitas
+                  {translate("activity_list", userSettings.language)}
                 </h2>
                 <span className="text-sm text-gray-500">
-                  {filteredActivities.length} dari {activities.length} aktivitas
+                  {translate(
+                    "showing_filtered_activities",
+                    userSettings.language,
+                    {
+                      filtered: filteredActivities.length,
+                      total: activities.length,
+                    }
+                  )}
                 </span>
               </div>
             </div>
@@ -417,8 +447,14 @@ const ActivityLog = () => {
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <h3 className="text-sm font-medium text-gray-900">
-                                {getActionText(activity.action)}{" "}
-                                {getTypeText(activity.type)}
+                                {translate(
+                                  `action_${activity.action}`,
+                                  userSettings.language
+                                )}{" "}
+                                {translate(
+                                  `type_${activity.type}`,
+                                  userSettings.language
+                                )}
                               </h3>
                               <p className="text-sm text-gray-600 mt-1">
                                 {activity.itemName}
@@ -449,10 +485,13 @@ const ActivityLog = () => {
                 <div className="text-center py-12">
                   <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500 mb-2">
-                    Tidak ada aktivitas ditemukan
+                    {translate("no_activities_found", userSettings.language)}
                   </p>
                   <p className="text-sm text-gray-400">
-                    Coba ubah filter atau kata kunci pencarian
+                    {translate(
+                      "no_activities_found_message",
+                      userSettings.language
+                    )}
                   </p>
                 </div>
               )}
@@ -463,9 +502,18 @@ const ActivityLog = () => {
               <div className="px-6 py-4 border-t border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-500">
-                    Menampilkan {indexOfFirstActivity + 1}-
-                    {Math.min(indexOfLastActivity, filteredActivities.length)}{" "}
-                    dari {filteredActivities.length} aktivitas
+                    {translate(
+                      "showing_activities_paginated",
+                      userSettings.language,
+                      {
+                        start: indexOfFirstActivity + 1,
+                        end: Math.min(
+                          indexOfLastActivity,
+                          filteredActivities.length
+                        ),
+                        total: filteredActivities.length,
+                      }
+                    )}
                   </div>
                   <div className="flex space-x-2">
                     <button

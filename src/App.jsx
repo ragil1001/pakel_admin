@@ -1,5 +1,4 @@
-// src/App.jsx
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,13 +15,14 @@ import Dashboard from "./pages/Dashboard";
 import ManageUmkm from "./pages/ManageUmkm";
 import ManageNews from "./pages/ManageNews";
 import ManageGallery from "./pages/ManageGallery";
-import ManageLocations from "./pages/ManageLocations";
-import ManageGeneralInfo from "./pages/ManageGeneralInfo";
 import ActivityLog from "./pages/ActivityLog";
+import AdminProfile from "./pages/AdminProfile";
+import AdminSettings from "./pages/AdminSettings";
 import { colorPalette } from "./colors";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { SidebarProvider, useSidebar } from "./context/SidebarContext";
 import { ToastContainer } from "react-toastify";
+import { logoutAdmin } from "./utils/firebaseUtils";
 import "react-toastify/dist/ReactToastify.css";
 
 const ProtectedRoute = ({ children }) => {
@@ -45,23 +45,50 @@ const ProtectedRoute = ({ children }) => {
 
 const AppContent = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, globalSettings } = useAuth();
   const { isCollapsed, isMobile } = useSidebar();
 
   const isLoginPage = location.pathname === "/";
 
-  // Dynamic margin calculation for main content
+  // Session Timeout Implementation
+  useEffect(() => {
+    if (!user || isLoginPage) return;
+
+    let timeoutId;
+    const resetTimeout = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        logoutAdmin().then(() => {
+          window.location.href = "/"; // Redirect to login page
+        });
+      }, globalSettings.sessionTimeout * 60 * 1000); // Convert minutes to milliseconds
+    };
+
+    // Reset timeout on user activity
+    const events = ["mousemove", "keydown", "click", "scroll"];
+    events.forEach((event) => {
+      window.addEventListener(event, resetTimeout);
+    });
+
+    resetTimeout(); // Initialize timeout
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach((event) => {
+        window.removeEventListener(event, resetTimeout);
+      });
+    };
+  }, [user, globalSettings.sessionTimeout, isLoginPage]);
+
   const getMainMargin = () => {
     if (isLoginPage) return "";
     if (isMobile) return "";
-    return isCollapsed ? "ml-16" : "ml-64"; // Menggunakan ml-16 dan ml-64 sesuai sidebar width
+    return isCollapsed ? "ml-16" : "ml-64";
   };
 
-  // Dynamic top margin for content (accounting for navbar)
   const getContentPadding = () => {
     if (isLoginPage) return "";
-    // Padding yang seimbang dengan navbar - menggunakan px-6 untuk konsistensi dengan navbar
-    return "pt-24 px-6"; // pt-20 untuk top margin dari navbar, px-6 untuk horizontal padding yang sama dengan navbar
+    return "pt-24 px-6";
   };
 
   return (
@@ -87,7 +114,6 @@ const AppContent = () => {
         <main
           className={`flex-grow transition-all duration-300 ${getMainMargin()} ${getContentPadding()}`}
         >
-          {/* Container untuk membatasi max-width dan memastikan alignment */}
           <div className="max-w-full">
             <ErrorBoundary>
               <Routes location={location}>
@@ -102,6 +128,22 @@ const AppContent = () => {
                   element={
                     <ProtectedRoute>
                       <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/profile"
+                  element={
+                    <ProtectedRoute>
+                      <AdminProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/settings"
+                  element={
+                    <ProtectedRoute>
+                      <AdminSettings />
                     </ProtectedRoute>
                   }
                 />
@@ -126,22 +168,6 @@ const AppContent = () => {
                   element={
                     <ProtectedRoute>
                       <ManageGallery />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard/locations"
-                  element={
-                    <ProtectedRoute>
-                      <ManageLocations />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard/general-info"
-                  element={
-                    <ProtectedRoute>
-                      <ManageGeneralInfo />
                     </ProtectedRoute>
                   }
                 />

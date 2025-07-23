@@ -1,12 +1,14 @@
-// src/pages/Login.jsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { colorPalette } from "../colors";
 import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
 import { loginAdmin } from "../utils/firebaseUtils";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { translate } from "../utils/translations";
 
 const Login = () => {
+  const { userSettings } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,11 +26,14 @@ const Login = () => {
       navigate("/dashboard");
     } catch (err) {
       setError(
-        err.code === "auth/wrong-password"
-          ? "Kata sandi salah."
-          : err.code === "auth/user-not-found"
-          ? "Email tidak ditemukan."
-          : "Terjadi kesalahan. Silakan coba lagi."
+        translate(
+          err.code === "auth/wrong-password"
+            ? "wrong_password"
+            : err.code === "auth/user-not-found"
+            ? "user_not_found"
+            : "login_error",
+          userSettings.language
+        )
       );
     } finally {
       setLoading(false);
@@ -59,10 +64,10 @@ const Login = () => {
               <LogIn className="w-10 h-10 text-white" />
             </motion.div>
             <h2 className="text-2xl font-bold text-gray-900 font-merriweather mb-2">
-              Login Admin
+              {translate("admin_login", userSettings.language)}
             </h2>
             <p className="text-sm text-gray-600 font-inter">
-              Masuk untuk mengakses dashboard admin
+              {translate("admin_login_description", userSettings.language)}
             </p>
           </div>
 
@@ -87,7 +92,7 @@ const Login = () => {
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-700 font-inter mb-2"
                 >
-                  Email Address
+                  {translate("email", userSettings.language)}
                 </label>
                 <div className="relative">
                   <input
@@ -97,7 +102,10 @@ const Login = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     className="form-input w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-inter text-gray-900 placeholder-gray-400 transition-all duration-200"
-                    placeholder="admin@padukuhanpakel.com"
+                    placeholder={translate(
+                      "email_placeholder",
+                      userSettings.language
+                    )}
                   />
                   <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </div>
@@ -109,7 +117,7 @@ const Login = () => {
                   htmlFor="password"
                   className="block text-sm font-medium text-gray-700 font-inter mb-2"
                 >
-                  Kata Sandi
+                  {translate("password", userSettings.language)}
                 </label>
                 <div className="relative">
                   <input
@@ -119,7 +127,10 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     className="form-input w-full pl-12 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-inter text-gray-900 placeholder-gray-400 transition-all duration-200"
-                    placeholder="••••••••"
+                    placeholder={translate(
+                      "password_placeholder",
+                      userSettings.language
+                    )}
                   />
                   <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <button
@@ -155,12 +166,12 @@ const Login = () => {
                 {loading ? (
                   <>
                     <div className="w-5 h-5 mr-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Memproses...
+                    {translate("processing", userSettings.language)}
                   </>
                 ) : (
                   <>
                     <LogIn className="w-5 h-5 mr-2" />
-                    Login
+                    {translate("login", userSettings.language)}
                   </>
                 )}
               </motion.button>
@@ -170,18 +181,10 @@ const Login = () => {
           {/* Footer Section */}
           <div className="px-8 py-6 bg-gray-50 border-t border-gray-100">
             <p className="text-xs text-gray-500 text-center font-inter">
-              © 2025 Padukuhan Pakel. Sistem Admin.
+              {translate("copyright", userSettings.language)}
             </p>
           </div>
         </div>
-
-        {/* Additional Info Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="mt-6 text-center"
-        ></motion.div>
       </motion.div>
     </div>
   );

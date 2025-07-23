@@ -1,50 +1,82 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { auth } from "../firebaseConfig";
-import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
+import {
+  onAuthStateChanged,
+  setPersistence,
+  browserSessionPersistence,
+  browserLocalPersistence,
+} from "firebase/auth";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [userSettings, setUserSettings] = useState({
+    language: "id",
+    dateFormat: "dd/mm/yyyy",
+    timeFormat: "24h",
+    itemsPerPage: 20,
+  });
+  const [globalSettings, setGlobalSettings] = useState({
+    sessionTimeout: 60,
+    autoLogout: true,
+  });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (currentUser) => {
-        setUser(currentUser);
-        setLoading(false);
-      },
-      (err) => {
-        console.error("Auth state error:", err);
-        setError(err.message);
-        setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        try {
+          // Load user settings
+          const userSettingsDoc = doc(db, "userSettings", currentUser.uid);
+          const userSettingsSnap = await getDoc(userSettingsDoc);
+          if (userSettingsSnap.exists()) {
+            setUserSettings((prev) => ({
+              ...prev,
+              ...userSettingsSnap.data(),
+            }));
+          }
+
+          // Load global settings
+          const globalSettingsDoc = doc(db, "globalSettings", "security");
+          const globalSettingsSnap = await getDoc(globalSettingsDoc);
+          if (globalSettingsSnap.exists()) {
+            setGlobalSettings((prev) => ({
+              ...prev,
+              ...globalSettingsSnap.data(),
+            }));
+          }
+
+          // Set Firebase auth persistence based on autoLogout
+          const persistence =
+            globalSettingsSnap.exists() && globalSettingsSnap.data().autoLogout
+              ? browserSessionPersistence
+              : browserLocalPersistence;
+          await setPersistence(auth, persistence);
+        } catch (error) {
+          console.error("Failed to load settings:", error);
+        }
       }
-    );
+      setLoading(false);
+    });
+
     return () => unsubscribe();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, error }}>
-      {error ? (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600">
-              Authentication Error
-            </h1>
-            <p className="text-gray-600">{error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg"
-            >
-              Reload
-            </button>
-          </div>
-        </div>
-      ) : (
-        children
-      )}
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        userSettings,
+        setUserSettings,
+        globalSettings,
+        setGlobalSettings,
+      }}
+    >
+      {children}
     </AuthContext.Provider>
   );
 };

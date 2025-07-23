@@ -10,11 +10,16 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { createUmkm, updateUmkm } from "../utils/firebaseUtils";
-import { convertImageToBase64 } from "../utils/imageUtils";
+import {
+  compressImageToBase64,
+  convertImageToBase64,
+} from "../utils/imageUtils";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
+import { useAuth } from "../context/AuthContext";
+import { translate } from "../utils/translations";
 
-// Komponen InputField yang dioptimalkan
+// Optimized InputField component
 const InputField = React.memo(
   ({
     label,
@@ -39,7 +44,7 @@ const InputField = React.memo(
           onChange={onChange}
           rows={rows}
           placeholder={placeholder}
-          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ${
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 form-input resize-none ${
             error
               ? "border-red-300 bg-red-50"
               : "border-gray-300 hover:border-gray-400"
@@ -52,7 +57,7 @@ const InputField = React.memo(
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 ${
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 form-input ${
             error
               ? "border-red-300 bg-red-50"
               : "border-gray-300 hover:border-gray-400"
@@ -81,9 +86,9 @@ const InputField = React.memo(
   }
 );
 
-// Komponen ImageUpload yang dioptimalkan
+// Optimized ImageUpload component
 const ImageUpload = React.memo(
-  ({ label, onChange, currentImage, error }) => (
+  ({ label, onChange, currentImage, error, language, imageProcessing }) => (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
         {label}
@@ -97,29 +102,50 @@ const ImageUpload = React.memo(
               accept="image/jpeg,image/png,image/jpg"
               onChange={onChange}
               className="hidden"
+              disabled={imageProcessing}
             />
             <div
-              className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-emerald-400 transition-colors ${
-                error
-                  ? "border-red-300 bg-red-50"
-                  : "border-gray-300 hover:bg-gray-50"
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                imageProcessing
+                  ? "border-blue-300 bg-blue-50 cursor-not-allowed"
+                  : error
+                  ? "border-red-300 bg-red-50 hover:border-red-400"
+                  : "border-gray-300 hover:bg-gray-50 hover:border-emerald-400"
               }`}
             >
-              <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-              <p className="text-sm text-gray-600">Klik untuk upload gambar</p>
-              <p className="text-xs text-gray-500 mt-1">
-                JPEG, PNG, JPG (Max 5MB)
-              </p>
+              {imageProcessing ? (
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2"></div>
+                  <p className="text-sm text-blue-600">
+                    {translate("processing_image", language) ||
+                      "Processing image..."}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600">
+                    {translate("upload_image", language)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    JPEG, PNG, JPG (Max 5MB, will be compressed to ~1MB when
+                    saving)
+                  </p>
+                </>
+              )}
             </div>
           </label>
         </div>
         {currentImage && (
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 relative">
             <img
               src={currentImage}
               alt="Preview"
               className="w-24 h-24 object-cover rounded-lg border border-gray-300"
             />
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+              <ImageIcon className="w-3 h-3 text-white" />
+            </div>
           </div>
         )}
       </div>
@@ -135,12 +161,15 @@ const ImageUpload = React.memo(
     return (
       prevProps.currentImage === nextProps.currentImage &&
       prevProps.error === nextProps.error &&
-      prevProps.label === nextProps.label
+      prevProps.label === nextProps.label &&
+      prevProps.language === nextProps.language &&
+      prevProps.imageProcessing === nextProps.imageProcessing
     );
   }
 );
 
 const UmkmForm = ({ umkm, onSave, onCancel }) => {
+  const { userSettings } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     owner: "",
@@ -163,6 +192,10 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
   const [variantErrors, setVariantErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
+  const [originalImage, setOriginalImage] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imageProcessing, setImageProcessing] = useState(false);
+  const [variantImageProcessing, setVariantImageProcessing] = useState(false);
 
   useEffect(() => {
     if (umkm) {
@@ -177,37 +210,69 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
         bio: umkm.bio || "",
         variants: Array.isArray(umkm.variants) ? umkm.variants : [],
       });
+      setOriginalImage(umkm.image || "");
     }
   }, [umkm]);
 
   const validateForm = useCallback(() => {
     const newErrors = {};
-    if (!formData.name) newErrors.name = "Nama produk wajib diisi.";
-    if (!formData.owner) newErrors.owner = "Pemilik wajib diisi.";
-    if (!formData.description) newErrors.description = "Deskripsi wajib diisi.";
-    if (!formData.price) newErrors.price = "Harga wajib diisi.";
+    if (!formData.name)
+      newErrors.name = translate("name_required", userSettings.language);
+    if (!formData.owner)
+      newErrors.owner = translate("owner_required", userSettings.language);
+    if (!formData.description)
+      newErrors.description = translate(
+        "description_required",
+        userSettings.language
+      );
+    if (!formData.price)
+      newErrors.price = translate("price_required", userSettings.language);
+    if (!originalImage && !imageFile)
+      newErrors.image = translate("image_required", userSettings.language);
     if (!formData.whatsapp) {
-      newErrors.whatsapp = "Nomor WhatsApp wajib diisi.";
+      newErrors.whatsapp = translate(
+        "whatsapp_required",
+        userSettings.language
+      );
     } else if (!/^\+62\d{9,12}$/.test(formData.whatsapp)) {
-      newErrors.whatsapp =
-        "Nomor WhatsApp harus dimulai dengan +62 dan berisi 9-12 digit.";
+      newErrors.whatsapp = translate("whatsapp_invalid", userSettings.language);
     }
-    if (!formData.location) newErrors.location = "Lokasi wajib diisi.";
-    if (!formData.bio) newErrors.bio = "Bio pemilik wajib diisi.";
+    if (!formData.location)
+      newErrors.location = translate(
+        "location_required",
+        userSettings.language
+      );
+    if (!formData.bio)
+      newErrors.bio = translate("bio_required", userSettings.language);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData]);
+  }, [formData, originalImage, imageFile, userSettings.language]);
 
   const validateVariant = useCallback(() => {
     const newErrors = {};
-    if (!variantForm.name) newErrors.name = "Nama varian wajib diisi.";
+    if (!variantForm.name)
+      newErrors.name = translate(
+        "variant_name_required",
+        userSettings.language
+      );
     if (!variantForm.description)
-      newErrors.description = "Deskripsi varian wajib diisi.";
-    if (!variantForm.price) newErrors.price = "Harga varian wajib diisi.";
-    if (!variantForm.image) newErrors.image = "Gambar varian wajib diisi.";
+      newErrors.description = translate(
+        "variant_description_required",
+        userSettings.language
+      );
+    if (!variantForm.price)
+      newErrors.price = translate(
+        "variant_price_required",
+        userSettings.language
+      );
+    if (!variantForm.image)
+      newErrors.image = translate(
+        "variant_image_required",
+        userSettings.language
+      );
     setVariantErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [variantForm]);
+  }, [variantForm, userSettings.language]);
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
@@ -215,17 +280,30 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   }, []);
 
-  const handleImageChange = useCallback(async (e) => {
-    try {
-      const file = e.target.files[0];
-      if (!file) return;
-      const base64 = await convertImageToBase64(file);
-      setFormData((prev) => ({ ...prev, image: base64 }));
-      setErrors((prev) => ({ ...prev, image: "" }));
-    } catch (error) {
-      setErrors((prev) => ({ ...prev, image: error.message }));
-    }
-  }, []);
+  const handleImageChange = useCallback(
+    async (e) => {
+      try {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setImageProcessing(true);
+        const previewBase64 = await convertImageToBase64(file);
+        setOriginalImage(previewBase64);
+        setImageFile(file);
+        setErrors((prev) => ({ ...prev, image: "" }));
+      } catch (error) {
+        setErrors((prev) => ({
+          ...prev,
+          image: translate("image_error", userSettings.language, {
+            error: error.message,
+          }),
+        }));
+      } finally {
+        setImageProcessing(false);
+      }
+    },
+    [userSettings.language]
+  );
 
   const handleVariantChange = useCallback((e) => {
     const { name, value } = e.target;
@@ -233,22 +311,36 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
     setVariantErrors((prev) => ({ ...prev, [name]: "" }));
   }, []);
 
-  const handleVariantImageChange = useCallback(async (e) => {
-    try {
-      const file = e.target.files[0];
-      if (!file) return;
-      const base64 = await convertImageToBase64(file);
-      setVariantForm((prev) => ({ ...prev, image: base64 }));
-      setVariantErrors((prev) => ({ ...prev, image: "" }));
-    } catch (error) {
-      setVariantErrors((prev) => ({ ...prev, image: error.message }));
-    }
-  }, []);
+  const handleVariantImageChange = useCallback(
+    async (e) => {
+      try {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setVariantImageProcessing(true);
+        const compressedBase64 = await compressImageToBase64(file);
+        setVariantForm((prev) => ({ ...prev, image: compressedBase64 }));
+        setVariantErrors((prev) => ({ ...prev, image: "" }));
+      } catch (error) {
+        setVariantErrors((prev) => ({
+          ...prev,
+          image: translate("image_error", userSettings.language, {
+            error: error.message,
+          }),
+        }));
+      } finally {
+        setVariantImageProcessing(false);
+      }
+    },
+    [userSettings.language]
+  );
 
   const addVariant = useCallback(() => {
     if (!validateVariant()) return;
     if (formData.variants.length >= 3) {
-      setVariantErrors({ general: "Maksimum 3 varian diperbolehkan." });
+      setVariantErrors({
+        general: translate("max_variants", userSettings.language),
+      });
       return;
     }
 
@@ -266,7 +358,7 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
     }));
     setVariantForm({ id: "", name: "", description: "", price: "", image: "" });
     setVariantErrors({});
-  }, [formData.variants, variantForm, validateVariant]);
+  }, [formData.variants, variantForm, validateVariant, userSettings.language]);
 
   const removeVariant = useCallback((id) => {
     setFormData((prev) => ({
@@ -280,16 +372,26 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
       e.preventDefault();
       if (!validateForm()) return;
 
-      const action = umkm ? "memperbarui" : "menyimpan";
+      const action = umkm
+        ? translate("update", userSettings.language)
+        : translate("save", userSettings.language);
       const confirmResult = await Swal.fire({
-        title: `Konfirmasi ${umkm ? "Perbarui" : "Simpan"} UMKM`,
-        text: `Apakah Anda yakin ingin ${action} UMKM "${formData.name}"?`,
+        title: translate(
+          umkm ? "confirm_update_umkm" : "confirm_save_umkm",
+          userSettings.language
+        ),
+        text: translate("confirm_umkm_action_text", userSettings.language, {
+          action,
+          name: formData.name,
+        }),
         icon: "question",
         showCancelButton: true,
         confirmButtonColor: colorPalette.primary,
         cancelButtonColor: colorPalette.error,
-        confirmButtonText: umkm ? "Perbarui" : "Simpan",
-        cancelButtonText: "Batal",
+        confirmButtonText: umkm
+          ? translate("update", userSettings.language)
+          : translate("save", userSettings.language),
+        cancelButtonText: translate("cancel", userSettings.language),
         reverseButtons: true,
         customClass: {
           popup: "rounded-2xl shadow-xl",
@@ -304,38 +406,69 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
 
       setLoading(true);
       try {
-        console.log("Data to be saved:", formData);
+        let finalFormData = { ...formData };
+
+        // Compress main image if a new file was uploaded
+        if (imageFile) {
+          const compressedBase64 = await compressImageToBase64(imageFile);
+          finalFormData.image = compressedBase64;
+        } else if (originalImage) {
+          finalFormData.image = originalImage;
+        }
+
+        // Ensure variants only contain serializable data
+        finalFormData.variants = finalFormData.variants.map((variant) => ({
+          id: variant.id,
+          name: variant.name,
+          description: variant.description,
+          price: variant.price,
+          image: variant.image,
+        }));
+
+        console.log("Data to be saved:", finalFormData);
         if (umkm) {
-          await updateUmkm(umkm.id, formData);
+          await updateUmkm(umkm.id, finalFormData);
         } else {
-          await createUmkm(formData);
+          await createUmkm(finalFormData);
         }
         onSave();
-        toast.success(`UMKM berhasil ${umkm ? "diperbarui" : "disimpan"}!`, {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          style: {
-            background: colorPalette.background,
-            color: colorPalette.text,
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          },
-          progressStyle: {
-            background: colorPalette.primary,
-          },
-        });
+        toast.success(
+          translate(
+            umkm ? "umkm_updated_success" : "umkm_saved_success",
+            userSettings.language
+          ),
+          {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            style: {
+              background: colorPalette.background,
+              color: colorPalette.text,
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            },
+            progressStyle: {
+              background: colorPalette.primary,
+            },
+          }
+        );
       } catch (error) {
         console.error("Failed to save UMKM:", error);
-        setErrors({ general: `Gagal menyimpan data: ${error.message}` });
+        setErrors({
+          general: translate("error_save_umkm", userSettings.language, {
+            error: error.message,
+          }),
+        });
         Swal.fire({
-          title: "Gagal!",
-          text: `Terjadi kesalahan saat ${action} UMKM: ${error.message}`,
+          title: translate("error", userSettings.language),
+          text: translate("error_save_umkm", userSettings.language, {
+            error: error.message,
+          }),
           icon: "error",
           confirmButtonColor: colorPalette.primary,
           customClass: {
@@ -349,12 +482,26 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
         setLoading(false);
       }
     },
-    [formData, umkm, onSave, validateForm]
+    [
+      formData,
+      umkm,
+      onSave,
+      validateForm,
+      userSettings.language,
+      imageFile,
+      originalImage,
+    ]
   );
 
   const tabs = [
-    { id: "basic", label: "Informasi Dasar" },
-    { id: "variants", label: "Varian Produk" },
+    {
+      id: "basic",
+      label: translate("basic_info", userSettings.language),
+    },
+    {
+      id: "variants",
+      label: translate("product_variants", userSettings.language),
+    },
   ];
 
   return (
@@ -383,10 +530,14 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
             <X className="w-5 h-5 text-white" />
           </button>
           <h3 className="text-2xl font-bold text-white">
-            {umkm ? "Edit UMKM" : "Tambah UMKM Baru"}
+            {umkm
+              ? translate("edit_umkm", userSettings.language)
+              : translate("add_new_umkm", userSettings.language)}
           </h3>
           <p className="text-emerald-100 mt-1">
-            {umkm ? "Perbarui informasi UMKM" : "Lengkapi informasi UMKM baru"}
+            {umkm
+              ? translate("update_umkm_info", userSettings.language)
+              : translate("complete_umkm_info", userSettings.language)}
           </p>
         </div>
 
@@ -435,78 +586,104 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <InputField
-                      label="Nama Produk"
+                      label={translate("product_name", userSettings.language)}
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
                       error={errors.name}
-                      placeholder="Keripik Singkong Renyah"
+                      placeholder={translate(
+                        "product_name_placeholder",
+                        userSettings.language
+                      )}
                     />
                     <InputField
-                      label="Pemilik"
+                      label={translate("owner", userSettings.language)}
                       name="owner"
                       value={formData.owner}
                       onChange={handleChange}
                       error={errors.owner}
-                      placeholder="Ibu Siti"
+                      placeholder={translate(
+                        "owner_placeholder",
+                        userSettings.language
+                      )}
                     />
                   </div>
 
                   <InputField
-                    label="Deskripsi Produk"
+                    label={translate(
+                      "product_description",
+                      userSettings.language
+                    )}
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
                     error={errors.description}
                     type="textarea"
                     rows={4}
-                    placeholder="Jelaskan produk Anda secara detail..."
+                    placeholder={translate(
+                      "product_description_placeholder",
+                      userSettings.language
+                    )}
                   />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <InputField
-                      label="Harga"
+                      label={translate("price", userSettings.language)}
                       name="price"
                       value={formData.price}
                       onChange={handleChange}
                       error={errors.price}
-                      placeholder="Rp 25.000/pack"
+                      placeholder={translate(
+                        "price_placeholder",
+                        userSettings.language
+                      )}
                     />
                     <InputField
-                      label="Nomor WhatsApp"
+                      label={translate("whatsapp", userSettings.language)}
                       name="whatsapp"
                       value={formData.whatsapp}
                       onChange={handleChange}
                       error={errors.whatsapp}
-                      placeholder="+6281234567890"
+                      placeholder={translate(
+                        "whatsapp_placeholder",
+                        userSettings.language
+                      )}
                     />
                   </div>
 
                   <InputField
-                    label="Lokasi (URL Google Maps)"
+                    label={translate("location", userSettings.language)}
                     name="location"
                     value={formData.location}
                     onChange={handleChange}
                     error={errors.location}
-                    placeholder="https://www.google.com/maps/place/Pakel"
+                    placeholder={translate(
+                      "location_placeholder",
+                      userSettings.language
+                    )}
                   />
 
                   <InputField
-                    label="Bio Pemilik"
+                    label={translate("owner_bio", userSettings.language)}
                     name="bio"
                     value={formData.bio}
                     onChange={handleChange}
                     error={errors.bio}
                     type="textarea"
                     rows={3}
-                    placeholder="Ceritakan tentang pemilik UMKM..."
+                    placeholder={translate(
+                      "owner_bio_placeholder",
+                      userSettings.language
+                    )}
                   />
 
                   <ImageUpload
-                    label="Gambar Produk"
+                    label={translate("product_image", userSettings.language)}
                     onChange={handleImageChange}
-                    currentImage={formData.image}
+                    currentImage={originalImage}
                     error={errors.image}
+                    language={userSettings.language}
+                    imageProcessing={imageProcessing}
                   />
                 </motion.div>
               )}
@@ -522,11 +699,10 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                 >
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h4 className="font-medium text-blue-900 mb-2">
-                      Varian Produk
+                      {translate("product_variants", userSettings.language)}
                     </h4>
                     <p className="text-sm text-blue-700">
-                      Tambahkan hingga 3 varian produk untuk memberikan pilihan
-                      lebih kepada pelanggan.
+                      {translate("variants_description", userSettings.language)}
                     </p>
                   </div>
 
@@ -534,7 +710,7 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                   {formData.variants.length > 0 && (
                     <div className="space-y-4">
                       <h5 className="font-medium text-gray-900">
-                        Varian Tersimpan
+                        {translate("saved_variants", userSettings.language)}
                       </h5>
                       {formData.variants.map((variant) => (
                         <motion.div
@@ -576,7 +752,7 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                   {formData.variants.length < 3 && (
                     <div className="bg-white border border-gray-200 rounded-lg p-6">
                       <h5 className="font-medium text-gray-900 mb-4">
-                        Tambah Varian Baru
+                        {translate("add_new_variant", userSettings.language)}
                       </h5>
 
                       {variantErrors.general && (
@@ -593,39 +769,62 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                       <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <InputField
-                            label="Nama Varian"
+                            label={translate(
+                              "variant_name",
+                              userSettings.language
+                            )}
                             name="name"
                             value={variantForm.name}
                             onChange={handleVariantChange}
                             error={variantErrors.name}
-                            placeholder="Rasa Pedas"
+                            placeholder={translate(
+                              "variant_name_placeholder",
+                              userSettings.language
+                            )}
                           />
                           <InputField
-                            label="Harga Varian"
+                            label={translate(
+                              "variant_price",
+                              userSettings.language
+                            )}
                             name="price"
                             value={variantForm.price}
                             onChange={handleVariantChange}
                             error={variantErrors.price}
-                            placeholder="Rp 30.000/pack"
+                            placeholder={translate(
+                              "variant_price_placeholder",
+                              userSettings.language
+                            )}
                           />
                         </div>
 
                         <InputField
-                          label="Deskripsi Varian"
+                          label={translate(
+                            "variant_description",
+                            userSettings.language
+                          )}
                           name="description"
                           value={variantForm.description}
                           onChange={handleVariantChange}
                           error={variantErrors.description}
                           type="textarea"
                           rows={2}
-                          placeholder="Deskripsi varian..."
+                          placeholder={translate(
+                            "variant_description_placeholder",
+                            userSettings.language
+                          )}
                         />
 
                         <ImageUpload
-                          label="Gambar Varian"
+                          label={translate(
+                            "variant_image",
+                            userSettings.language
+                          )}
                           onChange={handleVariantImageChange}
                           currentImage={variantForm.image}
                           error={variantErrors.image}
+                          language={userSettings.language}
+                          imageProcessing={variantImageProcessing}
                         />
 
                         <div className="flex justify-end">
@@ -636,7 +835,7 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                             whileTap={{ scale: 0.98 }}
                           >
                             <Plus className="w-4 h-4 mr-2" />
-                            Tambah Varian
+                            {translate("add_variant", userSettings.language)}
                           </motion.button>
                         </div>
                       </div>
@@ -657,26 +856,37 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              Batal
+              {translate("cancel", userSettings.language)}
             </motion.button>
             <motion.button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || imageProcessing || variantImageProcessing}
               className={`px-8 py-3 bg-emerald-600 text-white rounded-lg font-medium transition-all duration-200 flex-1 sm:flex-none sm:min-w-[120px] text-center ${
-                loading
+                loading || imageProcessing || variantImageProcessing
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-emerald-700"
               }`}
-              whileHover={loading ? {} : { scale: 1.02 }}
-              whileTap={loading ? {} : { scale: 0.98 }}
+              whileHover={
+                loading || imageProcessing || variantImageProcessing
+                  ? {}
+                  : { scale: 1.02 }
+              }
+              whileTap={
+                loading || imageProcessing || variantImageProcessing
+                  ? {}
+                  : { scale: 0.98 }
+              }
             >
               {loading ? (
                 <div className="flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Menyimpan...
+                  {translate("saving", userSettings.language)}
                 </div>
               ) : (
-                `${umkm ? "Perbarui" : "Simpan"} UMKM`
+                translate(
+                  umkm ? "update_umkm" : "save_umkm",
+                  userSettings.language
+                )
               )}
             </motion.button>
           </div>

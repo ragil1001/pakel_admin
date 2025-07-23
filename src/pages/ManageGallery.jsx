@@ -6,10 +6,13 @@ import GalleryForm from "../components/GalleryForm";
 import SearchBar from "../components/SearchBar";
 import Notification from "../components/Notification";
 import { getGallery } from "../utils/firebaseUtils";
+import { useAuth } from "../context/AuthContext";
+import { translate } from "../utils/translations";
 
 const GalleryTable = React.lazy(() => import("../components/GalleryTable"));
 
 const ManageGallery = () => {
+  const { userSettings } = useAuth();
   const [galleryItems, setGalleryItems] = useState([]);
   const [filteredGalleryItems, setFilteredGalleryItems] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -24,11 +27,14 @@ const ManageGallery = () => {
         setFilteredGalleryItems(data);
       } catch (error) {
         console.error("Failed to fetch Gallery:", error);
-        showNotification("Gagal memuat galeri.", "error");
+        // showNotification(
+        //   translate("error_load_gallery", userSettings.language),
+        //   "error"
+        // );
       }
     };
     fetchGallery();
-  }, []);
+  }, [userSettings.language]);
 
   const handleAdd = () => {
     setSelectedGallery(null);
@@ -50,11 +56,17 @@ const ManageGallery = () => {
       .then((data) => {
         setGalleryItems(data);
         setFilteredGalleryItems(data);
-        showNotification("Galeri berhasil disimpan.", "success");
+        // showNotification(
+        //   translate("gallery_saved_success", userSettings.language),
+        //   "success"
+        // );
       })
       .catch((error) => {
         console.error("Failed to refresh Gallery:", error);
-        showNotification("Gagal menyegarkan galeri.", "error");
+        // showNotification(
+        //   translate("error_refresh_gallery", userSettings.language),
+        //   "error"
+        // );
       });
     handleCloseForm();
   };
@@ -70,10 +82,10 @@ const ManageGallery = () => {
     );
   };
 
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
+  // const showNotification = (message, type) => {
+  //   setNotification({ message, type });
+  //   setTimeout(() => setNotification(null), 3000);
+  // };
 
   return (
     <div className="admin-content">
@@ -103,10 +115,10 @@ const ManageGallery = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Kelola Galeri
+                {translate("manage_gallery", userSettings.language)}
               </h1>
               <p className="text-sm text-gray-600 mt-1">
-                Manajemen galeri Padukuhan Pakel
+                {translate("manage_gallery_description", userSettings.language)}
               </p>
             </div>
             <motion.button
@@ -116,14 +128,17 @@ const ManageGallery = () => {
               whileTap={{ scale: 0.98 }}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Tambah Galeri
+              {translate("add_gallery", userSettings.language)}
             </motion.button>
           </div>
 
           {/* Search Bar and Additional Add Button (when data exists) */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="max-w-md">
-              <SearchBar onSearch={handleSearch} placeholder="Cari galeri..." />
+              <SearchBar
+                onSearch={handleSearch}
+                placeholder={translate("search_gallery", userSettings.language)}
+              />
             </div>
           </div>
 
@@ -134,7 +149,9 @@ const ManageGallery = () => {
                 fallback={
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-                    <span className="ml-2 text-gray-600">Memuat data...</span>
+                    <span className="ml-2 text-gray-600">
+                      {translate("loading_data", userSettings.language)}
+                    </span>
                   </div>
                 }
               >
@@ -162,7 +179,7 @@ const ManageGallery = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Tambah Galeri Baru
+                {translate("add_new_gallery", userSettings.language)}
               </motion.button>
             </motion.div>
           )}
@@ -178,10 +195,10 @@ const ManageGallery = () => {
                 <Plus className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Belum ada data galeri
+                {translate("no_gallery_data", userSettings.language)}
               </h3>
               <p className="text-gray-500 mb-4">
-                Mulai dengan menambahkan item galeri pertama Anda
+                {translate("no_gallery_data_message", userSettings.language)}
               </p>
               <motion.button
                 onClick={handleAdd}
@@ -190,7 +207,7 @@ const ManageGallery = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah Galeri
+                {translate("add_gallery", userSettings.language)}
               </motion.button>
             </motion.div>
           )}
@@ -206,10 +223,10 @@ const ManageGallery = () => {
                 <Plus className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Tidak ada hasil pencarian
+                {translate("no_search_results", userSettings.language)}
               </h3>
               <p className="text-gray-500 mb-4">
-                Coba ubah kata kunci pencarian Anda
+                {translate("no_search_results_message", userSettings.language)}
               </p>
               <motion.button
                 onClick={handleAdd}
@@ -218,7 +235,7 @@ const ManageGallery = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Tambah Galeri Baru
+                {translate("add_new_gallery", userSettings.language)}
               </motion.button>
             </motion.div>
           )}

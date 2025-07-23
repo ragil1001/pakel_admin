@@ -26,7 +26,7 @@ const ManageGeneralInfo = () => {
         setFilteredGeneralInfo(data);
       } catch (error) {
         console.error("Failed to fetch General Info:", error);
-        showNotification("Gagal memuat info umum.", "error");
+        // showNotification("Gagal memuat info umum.", "error");
       }
     };
     fetchGeneralInfo();
@@ -52,11 +52,11 @@ const ManageGeneralInfo = () => {
       .then((data) => {
         setGeneralInfo(data);
         setFilteredGeneralInfo(data);
-        showNotification("Info umum berhasil disimpan.", "success");
+        // showNotification("Info umum berhasil disimpan.", "success");
       })
       .catch((error) => {
         console.error("Failed to refresh General Info:", error);
-        showNotification("Gagal menyegarkan info umum.", "error");
+        // showNotification("Gagal menyegarkan info umum.", "error");
       });
     handleCloseForm();
   };
@@ -70,10 +70,10 @@ const ManageGeneralInfo = () => {
     );
   };
 
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
+  // const showNotification = (message, type) => {
+  //   setNotification({ message, type });
+  //   setTimeout(() => setNotification(null), 3000);
+  // };
 
   return (
     <motion.div

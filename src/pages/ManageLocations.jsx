@@ -35,7 +35,7 @@ const ManageLocations = () => {
         setFilteredLocations(data);
       } catch (error) {
         console.error("Failed to fetch Locations:", error);
-        showNotification("Gagal memuat lokasi.", "error");
+        // showNotification("Gagal memuat lokasi.", "error");
       }
     };
     fetchLocations();
@@ -61,11 +61,11 @@ const ManageLocations = () => {
       .then((data) => {
         setLocations(data);
         setFilteredLocations(data);
-        showNotification("Lokasi berhasil disimpan.", "success");
+        // showNotification("Lokasi berhasil disimpan.", "success");
       })
       .catch((error) => {
         console.error("Failed to refresh Locations:", error);
-        showNotification("Gagal menyegarkan lokasi.", "error");
+        // showNotification("Gagal menyegarkan lokasi.", "error");
       });
     handleCloseForm();
   };
@@ -77,10 +77,10 @@ const ManageLocations = () => {
     );
   };
 
-  const showNotification = (message, type) => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
+  // const showNotification = (message, type) => {
+  //   setNotification({ message, type });
+  //   setTimeout(() => setNotification(null), 3000);
+  // };
 
   return (
     <motion.div
