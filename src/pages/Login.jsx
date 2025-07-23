@@ -6,6 +6,7 @@ import { loginAdmin } from "../utils/firebaseUtils";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { translate } from "../utils/translations";
+import logo from "../assets/logo.png";
 
 const Login = () => {
   const { userSettings } = useAuth();
@@ -59,9 +60,13 @@ const Login = () => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.3, duration: 0.5, type: "spring" }}
-              className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-medium"
+              className="w-20 h-20 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-medium"
             >
-              <LogIn className="w-10 h-10 text-white" />
+              <img
+                src={logo}
+                alt={"logo"}
+                className={`h-15 w-auto object-contain rounded-lg`}
+              />
             </motion.div>
             <h2 className="text-2xl font-bold text-gray-900 font-merriweather mb-2">
               {translate("admin_login", userSettings.language)}
