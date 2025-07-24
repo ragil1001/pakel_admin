@@ -189,6 +189,7 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
     description: "",
     price: "",
     image: "",
+    unit: "pcs", // Default ke pcs
   });
   const [errors, setErrors] = useState({});
   const [variantErrors, setVariantErrors] = useState({});
@@ -209,7 +210,9 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
         whatsapp: umkm.whatsapp || "",
         location: umkm.location || "",
         bio: umkm.bio || "",
-        variants: Array.isArray(umkm.variants) ? umkm.variants : [],
+        variants: Array.isArray(umkm.variants)
+          ? umkm.variants.map((v) => ({ ...v, unit: v.unit || "pcs" }))
+          : [], // Default unit jika data lama
       });
       setOriginalImage(umkm.image || "");
     }
@@ -274,6 +277,11 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
         "variant_image_required",
         userSettings.language
       );
+    if (!variantForm.unit)
+      newErrors.unit = translate(
+        "variant_unit_required",
+        userSettings.language
+      );
     setVariantErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [variantForm, userSettings.language]);
@@ -310,8 +318,9 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
   );
 
   const handleVariantChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setVariantForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    const newValue = type === "radio" ? value : value; // Handle radio
+    setVariantForm((prev) => ({ ...prev, [name]: newValue }));
     setVariantErrors((prev) => ({ ...prev, [name]: "" }));
   }, []);
 
@@ -354,13 +363,21 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
       description: variantForm.description,
       price: variantForm.price,
       image: variantForm.image,
+      unit: variantForm.unit,
     };
 
     setFormData((prev) => ({
       ...prev,
       variants: [...prev.variants, newVariant],
     }));
-    setVariantForm({ id: "", name: "", description: "", price: "", image: "" });
+    setVariantForm({
+      id: "",
+      name: "",
+      description: "",
+      price: "",
+      image: "",
+      unit: "pcs",
+    });
     setVariantErrors({});
   }, [formData.variants, variantForm, validateVariant, userSettings.language]);
 
@@ -427,6 +444,7 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
           description: variant.description,
           price: variant.price,
           image: variant.image,
+          unit: variant.unit || "pcs", // Default jika data lama
         }));
 
         console.log("Data to be saved:", finalFormData);
@@ -725,7 +743,7 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                                 {variant.description}
                               </p>
                               <p className="text-sm font-medium text-emerald-600 mt-2">
-                                Rp {variant.price}/pcs
+                                Rp {variant.price}/{variant.unit || "pcs"}
                               </p>
                             </div>
                             <button
@@ -808,6 +826,47 @@ const UmkmForm = ({ umkm, onSave, onCancel }) => {
                             userSettings.language
                           )}
                         />
+
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            {translate("variant_unit", userSettings.language)}
+                            <span className="text-red-500 ml-1">*</span>
+                          </label>
+                          <div className="flex items-center space-x-4">
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                name="unit"
+                                value="pcs"
+                                checked={variantForm.unit === "pcs"}
+                                onChange={handleVariantChange}
+                                className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">
+                                /{translate("pcs", userSettings.language)}
+                              </span>
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                name="unit"
+                                value="kg"
+                                checked={variantForm.unit === "kg"}
+                                onChange={handleVariantChange}
+                                className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">
+                                /{translate("kg", userSettings.language)}
+                              </span>
+                            </label>
+                          </div>
+                          {variantErrors.unit && (
+                            <div className="flex items-center text-red-600 text-sm mt-1">
+                              <AlertCircle className="w-4 h-4 mr-1" />
+                              {variantErrors.unit}
+                            </div>
+                          )}
+                        </div>
 
                         <ImageUpload
                           label={translate(

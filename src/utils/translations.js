@@ -355,6 +355,11 @@ const translations = {
       "Ubah password secara berkala untuk menjaga keamanan",
     security_tip_logout:
       "Selalu logout setelah selesai menggunakan sistem admin",
+    // Tambahan untuk unit
+    variant_unit: "Satuan Harga",
+    variant_unit_required: "Satuan harga wajib dipilih.",
+    pcs: "pcs",
+    kg: "kg",
   },
   en: {
     // Navbar
@@ -708,6 +713,11 @@ const translations = {
       "Change your password regularly to maintain security",
     security_tip_logout:
       "Always log out after finishing using the admin system",
+    // Tambahan untuk unit
+    variant_unit: "Price Unit",
+    variant_unit_required: "Price unit is required.",
+    pcs: "pcs",
+    kg: "kg",
   },
 };
 

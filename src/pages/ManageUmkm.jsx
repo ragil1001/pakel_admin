@@ -128,7 +128,7 @@ const UmkmDetailModal = ({ umkm, onClose, userSettings }) => (
                         {variant.description}
                       </p>
                       <p className="text-sm font-medium text-emerald-600 mt-2">
-                        Rp {variant.price}/pcs
+                        Rp {variant.price}/{variant.unit || "pcs"}
                       </p>
                     </div>
                   </div>
