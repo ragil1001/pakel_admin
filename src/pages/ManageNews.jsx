@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import { colorPalette } from "../colors";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import NewsForm from "../components/NewsForm";
 import SearchBar from "../components/SearchBar";
 import Notification from "../components/Notification";
@@ -11,6 +11,109 @@ import { translate } from "../utils/translations";
 
 const NewsTable = React.lazy(() => import("../components/NewsTable"));
 
+const NewsDetailModal = ({ news, onClose, userSettings }) => (
+  <motion.div
+    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 0.3 }}
+    onClick={onClose}
+  >
+    <motion.div
+      className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl"
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.9, opacity: 0 }}
+      transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-6 relative flex-shrink-0">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+        >
+          <X className="w-5 h-5 text-white" />
+        </button>
+        <h3 className="text-2xl font-bold text-white">
+          {translate("news_details", userSettings.language)}
+        </h3>
+        <p className="text-emerald-100 mt-1">
+          {translate("news_details_description", userSettings.language)}
+        </p>
+      </div>
+
+      {/* Content - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-8 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-sm font-medium text-gray-700">
+              {translate("title", userSettings.language)}
+            </h4>
+            <p className="text-gray-900 break-words">{news.title || "-"}</p>
+          </div>
+          <div>
+            <h4 className="text-sm font-medium text-gray-700">
+              {translate("type", userSettings.language)}
+            </h4>
+            <p className="text-gray-900">
+              {translate(news.type.toLowerCase(), userSettings.language) ||
+                news.type}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-medium text-gray-700">
+            {translate("content", userSettings.language)}
+          </h4>
+          <div
+            className="text-gray-900 prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: news.content || "-" }}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 className="text-sm font-medium text-gray-700">
+              {translate("date", userSettings.language)}
+            </h4>
+            <p className="text-gray-900">{news.date || "-"}</p>
+          </div>
+        </div>
+
+        {news.image && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700">
+              {translate("news_image", userSettings.language)}
+            </h4>
+            <img
+              src={news.image}
+              alt={news.title || translate("no_title", userSettings.language)}
+              className="w-48 h-48 object-cover rounded-lg border border-gray-300"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="bg-gray-50 px-8 py-6 border-t border-gray-200 flex-shrink-0">
+        <div className="flex justify-end">
+          <motion.button
+            onClick={onClose}
+            className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {translate("close", userSettings.language)}
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  </motion.div>
+);
+
 const ManageNews = () => {
   const { userSettings } = useAuth();
   const [newsItems, setNewsItems] = useState([]);
@@ -18,6 +121,7 @@ const ManageNews = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedNews, setSelectedNews] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [selectedDetailNews, setSelectedDetailNews] = useState(null);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -27,10 +131,11 @@ const ManageNews = () => {
         setFilteredNewsItems(data);
       } catch (error) {
         console.error("Failed to fetch News:", error);
-        // showNotification(
-        //   translate("error_load_news", userSettings.language),
-        //   "error"
-        // );
+        setNotification({
+          message: translate("error_load_news", userSettings.language),
+          type: "error",
+        });
+        setTimeout(() => setNotification(null), 3000);
       }
     };
     fetchNews();
@@ -46,6 +151,14 @@ const ManageNews = () => {
     setIsFormOpen(true);
   };
 
+  const handleShowDetails = (news) => {
+    setSelectedDetailNews(news);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedDetailNews(null);
+  };
+
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setSelectedNews(null);
@@ -56,17 +169,19 @@ const ManageNews = () => {
       .then((data) => {
         setNewsItems(data);
         setFilteredNewsItems(data);
-        // showNotification(
-        //   translate("news_saved_success", userSettings.language),
-        //   "success"
-        // );
+        setNotification({
+          message: translate("news_saved_success", userSettings.language),
+          type: "success",
+        });
+        setTimeout(() => setNotification(null), 3000);
       })
       .catch((error) => {
         console.error("Failed to refresh News:", error);
-        // showNotification(
-        //   translate("error_refresh_news", userSettings.language),
-        //   "error"
-        // );
+        setNotification({
+          message: translate("error_refresh_news", userSettings.language),
+          type: "error",
+        });
+        setTimeout(() => setNotification(null), 3000);
       });
     handleCloseForm();
   };
@@ -81,11 +196,6 @@ const ManageNews = () => {
       )
     );
   };
-
-  // const showNotification = (message, type) => {
-  //   setNotification({ message, type });
-  //   setTimeout(() => setNotification(null), 3000);
-  // };
 
   return (
     <div className="admin-content">
@@ -111,30 +221,36 @@ const ManageNews = () => {
             </motion.div>
           )}
 
-          {/* Page Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {translate("manage_news", userSettings.language)}
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                {translate("manage_news_description", userSettings.language)}
-              </p>
+          {/* Responsive Page Header */}
+          <div className="flex flex-col space-y-4 pb-4 border-b border-gray-200 md:space-y-0">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+                  {translate("manage_news", userSettings.language)}
+                </h1>
+                <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                  {translate("manage_news_description", userSettings.language)}
+                </p>
+              </div>
+              <div className="flex-shrinkSubjects: 0">
+                <motion.button
+                  onClick={handleAdd}
+                  className="flex items-center justify-center w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-sm text-sm"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Plus className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="whitespace-nowrap">
+                    {translate("add_news", userSettings.language)}
+                  </span>
+                </motion.button>
+              </div>
             </div>
-            <motion.button
-              onClick={handleAdd}
-              className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-sm"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {translate("add_news", userSettings.language)}
-            </motion.button>
           </div>
 
-          {/* Search Bar and Additional Add Button (when data exists) */}
+          {/* Search Bar Section */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="max-w-md">
+            <div className="w-full sm:max-w-md">
               <SearchBar
                 onSearch={handleSearch}
                 placeholder={translate("search_news", userSettings.language)}
@@ -144,7 +260,7 @@ const ManageNews = () => {
 
           {/* Table Section */}
           {filteredNewsItems.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
               <Suspense
                 fallback={
                   <div className="flex items-center justify-center py-12">
@@ -159,6 +275,7 @@ const ManageNews = () => {
                   newsItems={filteredNewsItems}
                   onEdit={handleEdit}
                   onDelete={handleSave}
+                  onShowDetails={handleShowDetails}
                 />
               </Suspense>
             </div>
@@ -197,7 +314,7 @@ const ManageNews = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {translate("no_news_data", userSettings.language)}
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-500 mb-4 px-4">
                 {translate("no_news_data_message", userSettings.language)}
               </p>
               <motion.button
@@ -225,7 +342,7 @@ const ManageNews = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {translate("no_search_results", userSettings.language)}
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-500 mb-4 px-4">
                 {translate("no_search_results_message", userSettings.language)}
               </p>
               <motion.button
@@ -248,6 +365,15 @@ const ManageNews = () => {
           news={selectedNews}
           onSave={handleSave}
           onCancel={handleCloseForm}
+        />
+      )}
+
+      {/* Detail Modal */}
+      {selectedDetailNews && (
+        <NewsDetailModal
+          news={selectedDetailNews}
+          onClose={handleCloseDetails}
+          userSettings={userSettings}
         />
       )}
     </div>

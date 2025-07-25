@@ -263,40 +263,63 @@ const ManageUmkm = () => {
             </motion.div>
           )}
 
-          {/* Page Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-gray-200">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {translate("manage_umkm", userSettings.language)}
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                {translate("manage_umkm_description", userSettings.language)}
-              </p>
+          {/* Responsive Page Header */}
+          <div className="flex flex-col space-y-4 pb-4 border-b border-gray-200 md:space-y-0">
+            {/* Title and Button Row */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              {/* Title Section */}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+                  {translate("manage_umkm", userSettings.language)}
+                </h1>
+                <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                  {translate("manage_umkm_description", userSettings.language)}
+                </p>
+              </div>
+
+              {/* Add Button - Always positioned at top right */}
+              <div className="flex-shrink-0">
+                <motion.button
+                  onClick={handleAdd}
+                  className="flex items-center justify-center w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-sm text-sm"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Plus className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="whitespace-nowrap">
+                    {translate("add_umkm", userSettings.language)}
+                  </span>
+                </motion.button>
+              </div>
             </div>
-            <motion.button
-              onClick={handleAdd}
-              className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-sm"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {translate("add_umkm", userSettings.language)}
-            </motion.button>
           </div>
 
-          {/* Search Bar and Additional Add Button (when data exists) */}
+          {/* Search Bar Section */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="max-w-md">
+            <div className="w-full sm:max-w-md">
               <SearchBar
                 onSearch={handleSearch}
                 placeholder={translate("search_umkm", userSettings.language)}
               />
             </div>
+
+            {/* Mobile Add Button - Only show on very small screens if needed */}
+            {/* <div className="sm:hidden">
+              <motion.button
+                onClick={handleAdd}
+                className="flex items-center justify-center w-full px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-sm text-sm"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {translate("add_umkm", userSettings.language)}
+              </motion.button>
+            </div> */}
           </div>
 
           {/* Table Section */}
           {filteredUmkms.length > 0 && (
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
               <Suspense
                 fallback={
                   <div className="flex items-center justify-center py-12">
@@ -350,7 +373,7 @@ const ManageUmkm = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {translate("no_umkm_data", userSettings.language)}
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-500 mb-4 px-4">
                 {translate("no_umkm_data_message", userSettings.language)}
               </p>
               <motion.button
@@ -378,7 +401,7 @@ const ManageUmkm = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {translate("no_search_results", userSettings.language)}
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-500 mb-4 px-4">
                 {translate("no_search_results_message", userSettings.language)}
               </p>
               <motion.button

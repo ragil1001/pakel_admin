@@ -9,6 +9,8 @@ import {
 } from "../utils/imageUtils";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
@@ -27,9 +29,8 @@ const NewsForm = ({ news, onSave, onCancel }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
-  // New states for image handling
-  const [originalImage, setOriginalImage] = useState(""); // Store original uncompressed image for preview
-  const [imageFile, setImageFile] = useState(null); // Store the file for final compression
+  const [originalImage, setOriginalImage] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   const [imageProcessing, setImageProcessing] = useState(false);
 
   useEffect(() => {
@@ -91,7 +92,7 @@ const NewsForm = ({ news, onSave, onCancel }) => {
       newErrors.type = translate("type_required", userSettings.language);
     if (!formData.title)
       newErrors.title = translate("title_required", userSettings.language);
-    if (!formData.content)
+    if (!formData.content || formData.content === "<p><br></p>")
       newErrors.content = translate("content_required", userSettings.language);
     if (!formData.date)
       newErrors.date = translate("date_required", userSettings.language);
@@ -112,6 +113,16 @@ const NewsForm = ({ news, onSave, onCancel }) => {
     [errors]
   );
 
+  const handleContentChange = useCallback(
+    (value) => {
+      setFormData((prev) => ({ ...prev, content: value }));
+      if (errors.content) {
+        setErrors((prev) => ({ ...prev, content: "" }));
+      }
+    },
+    [errors]
+  );
+
   const handleImageChange = useCallback(
     async (e) => {
       try {
@@ -119,38 +130,10 @@ const NewsForm = ({ news, onSave, onCancel }) => {
         if (!file) return;
 
         setImageProcessing(true);
-
-        // Convert to base64 for preview (without compression for better preview quality)
         const previewBase64 = await convertImageToBase64(file);
         setOriginalImage(previewBase64);
-        setImageFile(file); // Store file for later compression
-
-        // Clear any previous image errors
+        setImageFile(file);
         setErrors((prev) => ({ ...prev, image: "" }));
-
-        // Show success message
-        // toast.success(
-        //   translate("image_uploaded_success", userSettings.language) ||
-        //     "Image uploaded successfully! It will be compressed when saving.",
-        //   {
-        //     position: "top-right",
-        //     autoClose: 2000,
-        //     hideProgressBar: false,
-        //     closeOnClick: true,
-        //     pauseOnHover: true,
-        //     draggable: true,
-        //     theme: "light",
-        //     style: {
-        //       background: colorPalette.background,
-        //       color: colorPalette.text,
-        //       borderRadius: "8px",
-        //       boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-        //     },
-        //     progressStyle: {
-        //       background: colorPalette.primary,
-        //     },
-        //   }
-        // );
       } catch (error) {
         setErrors((prev) => ({
           ...prev,
@@ -158,14 +141,6 @@ const NewsForm = ({ news, onSave, onCancel }) => {
             error: error.message,
           }),
         }));
-        // toast.error(
-        //   translate("image_upload_failed", userSettings.language) ||
-        //     "Failed to upload image",
-        //   {
-        //     position: "top-right",
-        //     autoClose: 3000,
-        //   }
-        // );
       } finally {
         setImageProcessing(false);
       }
@@ -243,39 +218,10 @@ const NewsForm = ({ news, onSave, onCancel }) => {
       try {
         let finalFormData = { ...formData };
 
-        // If there's a new image file, compress it now
         if (imageFile) {
-          // toast.info(
-          //   translate("compressing_image", userSettings.language) ||
-          //     "Compressing image...",
-          //   {
-          //     position: "top-right",
-          //     autoClose: false,
-          //     hideProgressBar: false,
-          //     closeOnClick: false,
-          //     pauseOnHover: false,
-          //     draggable: false,
-          //     theme: "light",
-          //     toastId: "compressing",
-          //   }
-          // );
-
           const compressedBase64 = await compressImageToBase64(imageFile);
           finalFormData.image = compressedBase64;
-
-          // Dismiss the compression toast
-          // toast.dismiss("compressing");
-
-          // toast.success(
-          //   translate("image_compressed_success", userSettings.language) ||
-          //     "Image compressed successfully!",
-          //   {
-          //     position: "top-right",
-          //     autoClose: 1500,
-          //   }
-          // );
         } else if (originalImage) {
-          // Use existing image if no new file was uploaded
           finalFormData.image = originalImage;
         }
 
@@ -315,10 +261,6 @@ const NewsForm = ({ news, onSave, onCancel }) => {
         );
       } catch (error) {
         console.error("Failed to save News:", error);
-
-        // Dismiss any loading toasts
-        // toast.dismiss("compressing");
-
         setErrors({
           general: translate("error_save_news", userSettings.language, {
             error: error.message,
@@ -352,6 +294,15 @@ const NewsForm = ({ news, onSave, onCancel }) => {
       originalImage,
     ]
   );
+
+  const quillModules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ["bold", "italic", "underline"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["clean"],
+    ],
+  };
 
   const tabs = [
     {
@@ -503,20 +454,19 @@ const NewsForm = ({ news, onSave, onCancel }) => {
                       {translate("content", userSettings.language)}
                       <span className="text-red-500 ml-1">*</span>
                     </label>
-                    <textarea
-                      name="content"
+                    <ReactQuill
                       value={formData.content}
-                      onChange={handleChange}
-                      rows={6}
-                      placeholder={translate(
-                        "news_content_placeholder",
-                        userSettings.language
-                      )}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 form-input resize-none ${
+                      onChange={handleContentChange}
+                      modules={quillModules}
+                      className={`border rounded-lg ${
                         errors.content
                           ? "border-red-300 bg-red-50"
                           : "border-gray-300 hover:border-gray-400"
                       }`}
+                      placeholder={translate(
+                        "news_content_placeholder",
+                        userSettings.language
+                      )}
                     />
                     {errors.content && (
                       <div className="flex items-center text-red-600 text-sm mt-1">

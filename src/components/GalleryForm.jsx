@@ -14,7 +14,6 @@ import { colorPalette } from "../colors";
 import { useAuth } from "../context/AuthContext";
 import { translate } from "../utils/translations";
 
-// Optimized InputField component
 const InputField = React.memo(
   ({
     label,
@@ -52,7 +51,7 @@ const InputField = React.memo(
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={` w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 form-input ${
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 form-input ${
             error
               ? "border-red-300 bg-red-50"
               : "border-gray-300 hover:border-gray-400"
@@ -81,7 +80,6 @@ const InputField = React.memo(
   }
 );
 
-// Updated ImageUpload component with new image handling strategy
 const ImageUpload = React.memo(
   ({ label, onChange, currentImage, error, language, imageProcessing }) => (
     <div className="space-y-2">
@@ -176,10 +174,8 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
-
-  // New states for image handling (same as NewsForm)
-  const [originalImage, setOriginalImage] = useState(""); // Store original uncompressed image for preview
-  const [imageFile, setImageFile] = useState(null); // Store the file for final compression
+  const [originalImage, setOriginalImage] = useState("");
+  const [imageFile, setImageFile] = useState(null);
   const [imageProcessing, setImageProcessing] = useState(false);
 
   useEffect(() => {
@@ -267,13 +263,9 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
         if (!file) return;
 
         setImageProcessing(true);
-
-        // Convert to base64 for preview (without compression for better preview quality)
         const previewBase64 = await convertImageToBase64(file);
         setOriginalImage(previewBase64);
-        setImageFile(file); // Store file for later compression
-
-        // Clear any previous image errors
+        setImageFile(file);
         setErrors((prev) => ({ ...prev, image: "" }));
       } catch (error) {
         setErrors((prev) => ({
@@ -328,10 +320,10 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
         : translate("save", userSettings.language);
       const confirmResult = await Swal.fire({
         title: translate(
-          gallery ? "confirm_update_gallery" : "confirm_save_gallery",
+          gallery ? "confirm_update_image" : "confirm_save_image",
           userSettings.language
         ),
-        text: translate("confirm_gallery_action_text", userSettings.language, {
+        text: translate("confirm_image_action_text", userSettings.language, {
           action,
           name: formData.name,
         }),
@@ -359,12 +351,10 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
       try {
         let finalFormData = { ...formData };
 
-        // If there's a new image file, compress it now (same as NewsForm)
         if (imageFile) {
           const compressedBase64 = await compressImageToBase64(imageFile);
           finalFormData.image = compressedBase64;
         } else if (originalImage) {
-          // Use existing image if no new file was uploaded
           finalFormData.image = originalImage;
         }
 
@@ -378,7 +368,7 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
         onSave();
         toast.success(
           translate(
-            gallery ? "gallery_updated_success" : "gallery_saved_success",
+            gallery ? "image_updated_success" : "image_saved_success",
             userSettings.language
           ),
           {
@@ -404,13 +394,13 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
       } catch (error) {
         console.error("Failed to save Gallery:", error);
         setErrors({
-          general: translate("error_save_gallery", userSettings.language, {
+          general: translate("error_save_image", userSettings.language, {
             error: error.message,
           }),
         });
         Swal.fire({
           title: translate("error", userSettings.language),
-          text: translate("error_save_gallery", userSettings.language, {
+          text: translate("error_save_image", userSettings.language, {
             error: error.message,
           }),
           icon: "error",
@@ -461,7 +451,6 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
         transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-6 relative flex-shrink-0">
           <button
             onClick={onCancel}
@@ -471,17 +460,15 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
           </button>
           <h3 className="text-2xl font-bold text-white">
             {gallery
-              ? translate("edit_gallery", userSettings.language)
-              : translate("add_new_gallery", userSettings.language)}
+              ? translate("edit_image", userSettings.language)
+              : translate("add_new_image", userSettings.language)}
           </h3>
           <p className="text-emerald-100 mt-1">
             {gallery
-              ? translate("update_gallery_info", userSettings.language)
-              : translate("complete_gallery_info", userSettings.language)}
+              ? translate("update_image_info", userSettings.language)
+              : translate("complete_image_info", userSettings.language)}
           </p>
         </div>
-
-        {/* Tabs */}
         <div className="border-b border-gray-200 bg-gray-50 flex-shrink-0">
           <nav className="flex px-8">
             {tabs.map((tab) => (
@@ -499,8 +486,6 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
             ))}
           </nav>
         </div>
-
-        {/* Content - Scrollable */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-8">
             {errors.general && (
@@ -513,7 +498,6 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
                 </div>
               </div>
             )}
-
             <AnimatePresence mode="wait">
               {activeTab === "basic" && (
                 <motion.div
@@ -561,18 +545,17 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
                       )}
                     </div>
                     <InputField
-                      label={translate("activity_name", userSettings.language)}
+                      label={translate("image_name", userSettings.language)}
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
                       error={errors.name}
                       placeholder={translate(
-                        "activity_name_placeholder",
+                        "image_name_placeholder",
                         userSettings.language
                       )}
                     />
                   </div>
-
                   <InputField
                     label={translate("description", userSettings.language)}
                     name="description"
@@ -582,11 +565,10 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
                     type="textarea"
                     rows={4}
                     placeholder={translate(
-                      "description_placeholder",
+                      "image_description_placeholder",
                       userSettings.language
                     )}
                   />
-
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">
                       {translate("date", userSettings.language)}
@@ -621,9 +603,8 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
                       </div>
                     )}
                   </div>
-
                   <ImageUpload
-                    label={translate("gallery_image", userSettings.language)}
+                    label={translate("image", userSettings.language)}
                     onChange={handleImageChange}
                     currentImage={originalImage}
                     error={errors.image}
@@ -635,8 +616,6 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
             </AnimatePresence>
           </div>
         </div>
-
-        {/* Footer - Fixed at bottom */}
         <div className="bg-gray-50 px-8 py-6 border-t border-gray-200 flex-shrink-0">
           <div className="flex flex-col sm:flex-row justify-end gap-4">
             <motion.button
@@ -665,7 +644,7 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
                 </div>
               ) : (
                 translate(
-                  gallery ? "update_gallery" : "save_gallery",
+                  gallery ? "update_image" : "save_image",
                   userSettings.language
                 )
               )}

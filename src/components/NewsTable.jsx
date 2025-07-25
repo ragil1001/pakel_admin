@@ -1,6 +1,14 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Edit, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  ChevronDown,
+  ChevronUp,
+  Info,
+} from "lucide-react";
 import { deleteNews } from "../utils/firebaseUtils";
 import Pagination from "./Pagination";
 import Swal from "sweetalert2";
@@ -9,13 +17,14 @@ import { colorPalette } from "../colors";
 import { useAuth } from "../context/AuthContext";
 import { translate } from "../utils/translations";
 
-const NewsTable = ({ newsItems, onEdit, onDelete }) => {
+const NewsTable = ({ newsItems, onEdit, onDelete, onShowDetails }) => {
   const { userSettings } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({
     key: "date",
     direction: "desc",
   });
+  const [expandedRows, setExpandedRows] = useState(new Set());
   const itemsPerPage = userSettings.itemsPerPage || 10;
 
   const formatDate = (dateStr) => {
@@ -27,23 +36,22 @@ const NewsTable = ({ newsItems, onEdit, onDelete }) => {
     } else {
       [day, month, year] = dateStr.split(" ");
       const monthMap = {
-        Januari: 1,
-        Februari: 2,
-        Maret: 3,
-        April: 4,
-        Mei: 5,
-        Juni: 6,
-        Juli: 7,
-        Agustus: 8,
-        September: 9,
-        Oktober: 10,
-        November: 11,
-        Desember: 12,
+        Januari: 0,
+        Februari: 1,
+        Maret: 2,
+        April: 3,
+        Mei: 4,
+        Juni: 5,
+        Juli: 6,
+        Agustus: 7,
+        September: 8,
+        Oktober: 9,
+        November: 10,
+        Desember: 11,
       };
-      month = monthMap[month] || parseInt(month);
+      month = monthMap[month] || parseInt(month) - 1;
     }
-
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const date = new Date(parseInt(year), parseInt(month), parseInt(day));
     if (isNaN(date.getTime()))
       return translate("unknown_time", userSettings.language);
 
@@ -61,6 +69,16 @@ const NewsTable = ({ newsItems, onEdit, onDelete }) => {
       key,
       direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
     }));
+  };
+
+  const toggleRowExpansion = (newsId) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(newsId)) {
+      newExpanded.delete(newsId);
+    } else {
+      newExpanded.add(newsId);
+    }
+    setExpandedRows(newExpanded);
   };
 
   const sortedNews = useMemo(() => {
@@ -192,7 +210,7 @@ const NewsTable = ({ newsItems, onEdit, onDelete }) => {
           popup: "rounded-2xl shadow-xl",
           title: "text-xl font-bold text-gray-900",
           content: "text-gray-600",
-          confirmButton: "px-6 py-3 rounded-lg font-medium transition-all",
+          confirmButton: "px-6 py-3 rounded- lg font-medium transition-all",
         },
       });
     }
@@ -209,17 +227,20 @@ const NewsTable = ({ newsItems, onEdit, onDelete }) => {
 
   return (
     <div className="overflow-hidden">
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      {/* Table Header */}
+      <div className="px-4 sm:px-6 py-4 bg-gray-50 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">
           {translate("news_list", userSettings.language)} ({sortedNews.length})
         </h3>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full">
+
+      {/* Desktop Table - Hidden on mobile */}
+      <div className="hidden lg:block overflow-x-auto">
+        <table className="w-full min-w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th
-                className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSort("title")}
               >
                 <div className="flex items-center">
@@ -277,13 +298,9 @@ const NewsTable = ({ newsItems, onEdit, onDelete }) => {
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 className="hover:bg-gray-50 transition-colors duration-200"
               >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
+                <td className="px-6 py-4">
+                  <div className="text-sm font-medium text-gray-900 break-words">
                     {news.title || translate("no_title", userSettings.language)}
-                  </div>
-                  <div className="text-sm text-gray-500 truncate max-w-xs">
-                    {news.content ||
-                      translate("no_content", userSettings.language)}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -338,6 +355,15 @@ const NewsTable = ({ newsItems, onEdit, onDelete }) => {
                       <Edit className="w-4 h-4" />
                     </motion.button>
                     <motion.button
+                      onClick={() => onShowDetails(news)}
+                      className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors duration-200"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      title={translate("details", userSettings.language)}
+                    >
+                      <Info className="w-4 h-4" />
+                    </motion.button>
+                    <motion.button
                       onClick={() =>
                         handleDelete(
                           news.id,
@@ -359,10 +385,132 @@ const NewsTable = ({ newsItems, onEdit, onDelete }) => {
           </tbody>
         </table>
       </div>
+
+      {/* Mobile Card Layout - Visible only on mobile */}
+      <div className="lg:hidden divide-y divide-gray-200 bg-white">
+        {currentNews.map((news, index) => (
+          <motion.div
+            key={news.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            className="p-4 hover:bg-gray-50 transition-colors duration-200"
+          >
+            <div className="flex items-start space-x-3">
+              {news.image && (
+                <div className="flex-shrink-0">
+                  <img
+                    className="h-16 w-16 rounded-lg object-cover"
+                    src={news.image}
+                    alt={
+                      news.title || translate("no_title", userSettings.language)
+                    }
+                    onError={(e) => {
+                      e.target.src =
+                        "https://via.placeholder.com/64?text=Image+Not+Found";
+                    }}
+                  />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-gray-900 break-words">
+                      {news.title ||
+                        translate("no_title", userSettings.language)}
+                    </h4>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {translate("type", userSettings.language)}:{" "}
+                      {translate(
+                        news.type.toLowerCase(),
+                        userSettings.language
+                      ) || news.type}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => toggleRowExpansion(news.id)}
+                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {expandedRows.has(news.id) ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+                <div className="mt-2 flex items-center space-x-4">
+                  <div className="text-sm text-gray-900">
+                    {formatDate(news.date)}
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center space-x-2">
+                  <motion.button
+                    onClick={() => onEdit(news)}
+                    className="flex items-center px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Edit className="w-3 h-3 mr-1" />
+                    {translate("edit", userSettings.language)}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => onShowDetails(news)}
+                    className="flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Info className="w-3 h-3 mr-1" />
+                    {translate("details", userSettings.language)}
+                  </motion.button>
+                  <motion.button
+                    onClick={() =>
+                      handleDelete(
+                        news.id,
+                        news.title ||
+                          translate("no_title", userSettings.language)
+                      )
+                    }
+                    className="flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    {translate("delete", userSettings.language)}
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+            {expandedRows.has(news.id) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mt-4 pt-4 border-t border-gray-200"
+              >
+                <div className="space-y-3">
+                  {!news.image && (
+                    <div>
+                      <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {translate("image", userSettings.language)}
+                      </dt>
+                      <dd className="text-sm text-gray-500 mt-1">
+                        {translate("no_image", userSettings.language)}
+                      </dd>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
+        <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+            <div className="text-sm text-gray-700 text-center sm:text-left">
               {translate("showing", userSettings.language, {
                 start: indexOfFirstItem + 1,
                 end: Math.min(indexOfLastItem, sortedNews.length),

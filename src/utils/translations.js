@@ -251,7 +251,7 @@ const translations = {
     variant_name_placeholder: "Rasa Pedas",
     variant_description: "Deskripsi Varian",
     variant_description_placeholder: "Deskripsi varian...",
-    variant_price: "Harga Varian/pcs",
+    variant_price: "Harga Varian",
     variant_price_placeholder: "30000",
     variant_image: "Gambar Varian",
     add_variant: "Tambah Varian",

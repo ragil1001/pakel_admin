@@ -1,6 +1,14 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Edit, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  ChevronDown,
+  ChevronUp,
+  Info,
+} from "lucide-react";
 import { deleteGallery } from "../utils/firebaseUtils";
 import Pagination from "./Pagination";
 import Swal from "sweetalert2";
@@ -9,13 +17,14 @@ import { colorPalette } from "../colors";
 import { useAuth } from "../context/AuthContext";
 import { translate } from "../utils/translations";
 
-const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
+const GalleryTable = ({ galleryItems, onEdit, onDelete, onShowDetails }) => {
   const { userSettings } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({
     key: "date",
     direction: "desc",
   });
+  const [expandedRows, setExpandedRows] = useState(new Set());
   const itemsPerPage = userSettings.itemsPerPage || 10;
 
   const formatDate = (dateStr) => {
@@ -40,10 +49,9 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
         November: 10,
         Desember: 11,
       };
-      month = monthMap[month] || parseInt(month);
+      month = monthMap[month] || parseInt(month) - 1;
     }
-
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const date = new Date(parseInt(year), parseInt(month), parseInt(day));
     if (isNaN(date.getTime()))
       return translate("unknown_time", userSettings.language);
 
@@ -61,6 +69,16 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
       key,
       direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
     }));
+  };
+
+  const toggleRowExpansion = (galleryId) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(galleryId)) {
+      newExpanded.delete(galleryId);
+    } else {
+      newExpanded.add(galleryId);
+    }
+    setExpandedRows(newExpanded);
   };
 
   const sortedGallery = useMemo(() => {
@@ -135,8 +153,8 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
 
   const handleDelete = async (id, name) => {
     const confirmResult = await Swal.fire({
-      title: translate("confirm_delete_gallery", userSettings.language),
-      text: translate("confirm_delete_gallery_text", userSettings.language, {
+      title: translate("confirm_delete_image", userSettings.language),
+      text: translate("confirm_delete_image_text", userSettings.language, {
         name,
       }),
       icon: "warning",
@@ -160,33 +178,30 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
     try {
       await deleteGallery(id);
       onDelete();
-      toast.success(
-        translate("gallery_deleted_success", userSettings.language),
-        {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          style: {
-            background: colorPalette.background,
-            color: colorPalette.text,
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-          },
-          progressStyle: {
-            background: colorPalette.primary,
-          },
-        }
-      );
+      toast.success(translate("image_deleted_success", userSettings.language), {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        style: {
+          background: colorPalette.background,
+          color: colorPalette.text,
+          borderRadius: "8px",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+        },
+        progressStyle: {
+          background: colorPalette.primary,
+        },
+      });
     } catch (error) {
       console.error("Failed to delete Gallery:", error);
       Swal.fire({
         title: translate("error", userSettings.language),
-        text: translate("error_delete_gallery", userSettings.language, {
+        text: translate("error_delete_image", userSettings.language, {
           error: error.message,
         }),
         icon: "error",
@@ -207,22 +222,19 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
   const totalPages = Math.ceil(sortedGallery.length / itemsPerPage);
 
   if (sortedGallery.length === 0) {
-    return null; // Let parent component handle empty state
+    return null;
   }
 
   return (
     <div className="overflow-hidden">
-      {/* Table Header */}
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <div className="px-4 sm:px-6 py-4 bg-gray-50 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">
-          {translate("gallery_list", userSettings.language)} (
+          {translate("image_list", userSettings.language)} (
           {sortedGallery.length})
         </h3>
       </div>
-
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="hidden lg:block overflow-x-auto">
+        <table className="w-full min-w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th
@@ -284,14 +296,10 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 className="hover:bg-gray-50 transition-colors duration-200"
               >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
+                <td className="px-6 py-4">
+                  <div className="text-sm font-medium text-gray-900 break-words">
                     {gallery.name ||
                       translate("no_title", userSettings.language)}
-                  </div>
-                  <div className="text-sm text-gray-500 truncate max-w-xs">
-                    {gallery.description ||
-                      translate("no_content", userSettings.language)}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -346,6 +354,15 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
                       <Edit className="w-4 h-4" />
                     </motion.button>
                     <motion.button
+                      onClick={() => onShowDetails(gallery)}
+                      className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors duration-200"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      title={translate("details", userSettings.language)}
+                    >
+                      <Info className="w-4 h-4" />
+                    </motion.button>
+                    <motion.button
                       onClick={() =>
                         handleDelete(
                           gallery.id,
@@ -367,12 +384,129 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete }) => {
           </tbody>
         </table>
       </div>
-
-      {/* Pagination */}
+      <div className="lg:hidden divide-y divide-gray-200 bg-white">
+        {currentGallery.map((gallery, index) => (
+          <motion.div
+            key={gallery.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            className="p-4 hover:bg-gray-50 transition-colors duration-200"
+          >
+            <div className="flex items-start space-x-3">
+              {gallery.image && (
+                <div className="flex-shrink-0">
+                  <img
+                    className="h-16 w-16 rounded-lg object-cover"
+                    src={gallery.image}
+                    alt={
+                      gallery.name ||
+                      translate("no_title", userSettings.language)
+                    }
+                    onError={(e) => {
+                      e.target.src =
+                        "https://via.placeholder.com/64?text=Image+Not+Found";
+                    }}
+                  />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-gray-900 break-words">
+                      {gallery.name ||
+                        translate("no_title", userSettings.language)}
+                    </h4>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {translate("type", userSettings.language)}:{" "}
+                      {translate(
+                        gallery.type.toLowerCase(),
+                        userSettings.language
+                      ) || gallery.type}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => toggleRowExpansion(gallery.id)}
+                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {expandedRows.has(gallery.id) ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+                <div className="mt-2 flex items-center space-x-4">
+                  <div className="text-sm text-gray-900">
+                    {formatDate(gallery.date)}
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center space-x-2">
+                  <motion.button
+                    onClick={() => onEdit(gallery)}
+                    className="flex items-center px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Edit className="w-3 h-3 mr-1" />
+                    {translate("edit", userSettings.language)}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => onShowDetails(gallery)}
+                    className="flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Info className="w-3 h-3 mr-1" />
+                    {translate("details", userSettings.language)}
+                  </motion.button>
+                  <motion.button
+                    onClick={() =>
+                      handleDelete(
+                        gallery.id,
+                        gallery.name ||
+                          translate("no_title", userSettings.language)
+                      )
+                    }
+                    className="flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    {translate("delete", userSettings.language)}
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+            {expandedRows.has(gallery.id) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mt-4 pt-4 border-t border-gray-200"
+              >
+                <div className="space-y-3">
+                  {!gallery.image && (
+                    <div>
+                      <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {translate("image", userSettings.language)}
+                      </dt>
+                      <dd className="text-sm text-gray-500 mt-1">
+                        {translate("no_image", userSettings.language)}
+                      </dd>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        ))}
+      </div>
       {totalPages > 1 && (
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
+        <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+            <div className="text-sm text-gray-700 text-center sm:text-left">
               {translate("showing", userSettings.language, {
                 start: indexOfFirstItem + 1,
                 end: Math.min(indexOfLastItem, sortedGallery.length),

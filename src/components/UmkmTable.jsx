@@ -9,6 +9,8 @@ import {
   ArrowUp,
   ArrowDown,
   Info,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { deleteUmkm } from "../utils/firebaseUtils";
 import Pagination from "./Pagination";
@@ -24,6 +26,7 @@ const UmkmTable = ({ umkms, onEdit, onDelete, onShowDetails }) => {
     key: "createdAt",
     direction: "desc",
   });
+  const [expandedRows, setExpandedRows] = useState(new Set());
   const itemsPerPage = userSettings.itemsPerPage || 10;
 
   const formatDate = (dateInput) => {
@@ -79,6 +82,16 @@ const UmkmTable = ({ umkms, onEdit, onDelete, onShowDetails }) => {
     }));
   };
 
+  const toggleRowExpansion = (umkmId) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(umkmId)) {
+      newExpanded.delete(umkmId);
+    } else {
+      newExpanded.add(umkmId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
   const sortedUmkms = useMemo(() => {
     const sorted = [...umkms];
     if (sortConfig.key) {
@@ -116,7 +129,7 @@ const UmkmTable = ({ umkms, onEdit, onDelete, onShowDetails }) => {
               aDate = new Date(aYear, monthMap[aMonth] || aMonth - 1, aDay);
             }
           } else {
-            aDate = new Date(0); // Fallback for invalid dates
+            aDate = new Date(0);
           }
 
           if (typeof bValue === "object" && bValue.toDate) {
@@ -144,7 +157,7 @@ const UmkmTable = ({ umkms, onEdit, onDelete, onShowDetails }) => {
               bDate = new Date(bYear, monthMap[bMonth] || bMonth - 1, bDay);
             }
           } else {
-            bDate = new Date(0); // Fallback for invalid dates
+            bDate = new Date(0);
           }
 
           if (isNaN(aDate.getTime()) || isNaN(bDate.getTime())) {
@@ -235,21 +248,21 @@ const UmkmTable = ({ umkms, onEdit, onDelete, onShowDetails }) => {
   const totalPages = Math.ceil(sortedUmkms.length / itemsPerPage);
 
   if (sortedUmkms.length === 0) {
-    return null; // Let parent component handle empty state
+    return null;
   }
 
   return (
     <div className="overflow-hidden">
       {/* Table Header */}
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <div className="px-4 sm:px-6 py-4 bg-gray-50 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">
           {translate("umkm_list", userSettings.language)} ({sortedUmkms.length})
         </h3>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      {/* Desktop Table - Hidden on mobile */}
+      <div className="hidden lg:block overflow-x-auto">
+        <table className="w-full min-w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th
@@ -442,11 +455,223 @@ const UmkmTable = ({ umkms, onEdit, onDelete, onShowDetails }) => {
         </table>
       </div>
 
+      {/* Mobile Card Layout - Visible only on mobile */}
+      <div className="lg:hidden divide-y divide-gray-200 bg-white">
+        {currentUmkms.map((umkm, index) => (
+          <motion.div
+            key={umkm.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
+            className="p-4 hover:bg-gray-50 transition-colors duration-200"
+          >
+            {/* Main Card Content */}
+            <div className="flex items-start space-x-3">
+              {/* Product Image */}
+              {umkm.image && (
+                <div className="flex-shrink-0">
+                  <img
+                    className="h-16 w-16 rounded-lg object-cover"
+                    src={umkm.image}
+                    alt={
+                      umkm.name || translate("no_title", userSettings.language)
+                    }
+                    onError={(e) => {
+                      e.target.src =
+                        "https://via.placeholder.com/64?text=Image+Not+Found";
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Product Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-gray-900 truncate">
+                      {umkm.name ||
+                        translate("no_title", userSettings.language)}
+                    </h4>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {translate("owner", userSettings.language)}: {umkm.owner}
+                    </p>
+                  </div>
+
+                  {/* Expand/Collapse Button */}
+                  <button
+                    onClick={() => toggleRowExpansion(umkm.id)}
+                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {expandedRows.has(umkm.id) ? (
+                      <ChevronUp className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Basic Info - Always Visible */}
+                <div className="mt-2 flex items-center space-x-4">
+                  {/* Variants Badge */}
+                  <div>
+                    {umkm.variants && umkm.variants.length > 0 ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                        {translate("variants_count", userSettings.language, {
+                          count: umkm.variants.length,
+                        })}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {translate("no_variants", userSettings.language)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Contact Icons */}
+                  <div className="flex items-center space-x-2">
+                    {umkm.whatsapp && (
+                      <a
+                        href={`https://wa.me/${umkm.whatsapp.replace("+", "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-600 hover:text-green-800 transition-colors"
+                        title={translate("whatsapp", userSettings.language)}
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </a>
+                    )}
+                    {umkm.location && (
+                      <a
+                        href={umkm.location}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 transition-colors"
+                        title={translate("location", userSettings.language)}
+                      >
+                        <MapPin className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons - Always Visible */}
+                <div className="mt-3 flex items-center space-x-2">
+                  <motion.button
+                    onClick={() => onEdit(umkm)}
+                    className="flex items-center px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Edit className="w-3 h-3 mr-1" />
+                    {translate("edit", userSettings.language)}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => onShowDetails(umkm)}
+                    className="flex items-center px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Info className="w-3 h-3 mr-1" />
+                    {translate("details", userSettings.language)}
+                  </motion.button>
+                  <motion.button
+                    onClick={() =>
+                      handleDelete(
+                        umkm.id,
+                        umkm.name ||
+                          translate("no_title", userSettings.language)
+                      )
+                    }
+                    className="flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    {translate("delete", userSettings.language)}
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+
+            {/* Expanded Details - Only visible when expanded */}
+            {expandedRows.has(umkm.id) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mt-4 pt-4 border-t border-gray-200"
+              >
+                <div className="space-y-3">
+                  {/* Description */}
+                  {umkm.description && (
+                    <div>
+                      <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {translate(
+                          "product_description",
+                          userSettings.language
+                        )}
+                      </dt>
+                      <dd className="text-sm text-gray-900 mt-1">
+                        {umkm.description}
+                      </dd>
+                    </div>
+                  )}
+
+                  {/* Owner Bio */}
+                  {umkm.bio && (
+                    <div>
+                      <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {translate("owner_bio", userSettings.language)}
+                      </dt>
+                      <dd className="text-sm text-gray-900 mt-1">{umkm.bio}</dd>
+                    </div>
+                  )}
+
+                  {/* Date */}
+                  <div>
+                    <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {translate("date", userSettings.language)}
+                    </dt>
+                    <dd className="text-sm text-gray-900 mt-1">
+                      {formatDate(umkm.createdAt)}
+                    </dd>
+                  </div>
+
+                  {/* Contact Details */}
+                  {(umkm.whatsapp || umkm.location) && (
+                    <div>
+                      <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {translate("contact", userSettings.language)}
+                      </dt>
+                      <dd className="text-sm text-gray-900 mt-1 space-y-1">
+                        {umkm.whatsapp && (
+                          <div className="flex items-center">
+                            <MessageCircle className="w-4 h-4 mr-2 text-green-600" />
+                            <span>{umkm.whatsapp}</span>
+                          </div>
+                        )}
+                        {umkm.location && (
+                          <div className="flex items-center">
+                            <MapPin className="w-4 h-4 mr-2 text-blue-600" />
+                            <span className="truncate">{umkm.location}</span>
+                          </div>
+                        )}
+                      </dd>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
+        <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+            <div className="text-sm text-gray-700 text-center sm:text-left">
               {translate("showing", userSettings.language, {
                 start: indexOfFirstItem + 1,
                 end: Math.min(indexOfLastItem, sortedUmkms.length),
