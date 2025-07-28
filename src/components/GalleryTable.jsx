@@ -153,8 +153,8 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete, onShowDetails }) => {
 
   const handleDelete = async (id, name) => {
     const confirmResult = await Swal.fire({
-      title: translate("confirm_delete_image", userSettings.language),
-      text: translate("confirm_delete_image_text", userSettings.language, {
+      title: translate("confirm_delete_gallery", userSettings.language),
+      text: translate("confirm_delete_gallery_text", userSettings.language, {
         name,
       }),
       icon: "warning",
@@ -178,30 +178,33 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete, onShowDetails }) => {
     try {
       await deleteGallery(id);
       onDelete();
-      toast.success(translate("image_deleted_success", userSettings.language), {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        style: {
-          background: colorPalette.background,
-          color: colorPalette.text,
-          borderRadius: "8px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-        },
-        progressStyle: {
-          background: colorPalette.primary,
-        },
-      });
+      toast.success(
+        translate("gallery_deleted_success", userSettings.language),
+        {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          style: {
+            background: colorPalette.background,
+            color: colorPalette.text,
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          },
+          progressStyle: {
+            background: colorPalette.primary,
+          },
+        }
+      );
     } catch (error) {
       console.error("Failed to delete Gallery:", error);
       Swal.fire({
         title: translate("error", userSettings.language),
-        text: translate("error_delete_image", userSettings.language, {
+        text: translate("error_delete_gallery", userSettings.language, {
           error: error.message,
         }),
         icon: "error",
@@ -229,7 +232,7 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete, onShowDetails }) => {
     <div className="overflow-hidden">
       <div className="px-4 sm:px-6 py-4 bg-gray-50 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">
-          {translate("image_list", userSettings.language)} (
+          {translate("gallery_list", userSettings.language)} (
           {sortedGallery.length})
         </h3>
       </div>
@@ -326,8 +329,7 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete, onShowDetails }) => {
                           translate("no_title", userSettings.language)
                         }
                         onError={(e) => {
-                          e.target.src =
-                            "https://via.placeholder.com/48?text=Image+Not+Found";
+                          e.target.src = "/public/profil/profil1.jpg";
                           toast.error(
                             translate("image_error", userSettings.language, {
                               error: "Image failed to load",
@@ -404,8 +406,7 @@ const GalleryTable = ({ galleryItems, onEdit, onDelete, onShowDetails }) => {
                       translate("no_title", userSettings.language)
                     }
                     onError={(e) => {
-                      e.target.src =
-                        "https://via.placeholder.com/64?text=Image+Not+Found";
+                      e.target.src = "/public/profil/profil1.jpg";
                     }}
                   />
                 </div>

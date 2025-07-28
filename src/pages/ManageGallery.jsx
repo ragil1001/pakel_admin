@@ -86,6 +86,9 @@ const GalleryDetailModal = ({ gallery, onClose, userSettings }) => (
               src={gallery.image}
               alt={gallery.name || translate("no_title", userSettings.language)}
               className="w-48 h-48 object-cover rounded-lg border border-gray-300"
+              onError={(e) => {
+                e.target.src = "/public/profil/profil1.jpg";
+              }}
             />
           </div>
         )}
@@ -124,7 +127,7 @@ const ManageGallery = () => {
       } catch (error) {
         console.error("Failed to fetch Gallery:", error);
         setNotification({
-          message: translate("error_load_images", userSettings.language),
+          message: translate("error_load_gallery", userSettings.language),
           type: "error",
         });
         setTimeout(() => setNotification(null), 3000);
@@ -170,7 +173,7 @@ const ManageGallery = () => {
       .catch((error) => {
         console.error("Failed to refresh Gallery:", error);
         setNotification({
-          message: translate("error_refresh_images", userSettings.language),
+          message: translate("error_refresh_gallery", userSettings.language),
           type: "error",
         });
         setTimeout(() => setNotification(null), 3000);
@@ -215,11 +218,11 @@ const ManageGallery = () => {
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
-                  {translate("manage_images", userSettings.language)}
+                  {translate("manage_gallery", userSettings.language)}
                 </h1>
                 <p className="text-sm text-gray-600 mt-1 leading-relaxed">
                   {translate(
-                    "manage_images_description",
+                    "manage_gallery_description",
                     userSettings.language
                   )}
                 </p>
@@ -233,7 +236,7 @@ const ManageGallery = () => {
                 >
                   <Plus className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="whitespace-nowrap">
-                    {translate("add_image", userSettings.language)}
+                    {translate("add_new_gallery", userSettings.language)}
                   </span>
                 </motion.button>
               </div>
@@ -243,7 +246,7 @@ const ManageGallery = () => {
             <div className="w-full sm:max-w-md">
               <SearchBar
                 onSearch={handleSearch}
-                placeholder={translate("search_images", userSettings.language)}
+                placeholder={translate("search_gallery", userSettings.language)}
               />
             </div>
           </div>
@@ -282,7 +285,7 @@ const ManageGallery = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-5 h-5 mr-2" />
-                {translate("add_new_image", userSettings.language)}
+                {translate("add_new_gallery", userSettings.language)}
               </motion.button>
             </motion.div>
           )}
@@ -296,10 +299,10 @@ const ManageGallery = () => {
                 <Plus className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {translate("no_image_data", userSettings.language)}
+                {translate("no_gallery_data", userSettings.language)}
               </h3>
               <p className="text-gray-500 mb-4 px-4">
-                {translate("no_image_data_message", userSettings.language)}
+                {translate("no_gallery_data_message", userSettings.language)}
               </p>
               <motion.button
                 onClick={handleAdd}
@@ -308,7 +311,7 @@ const ManageGallery = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                {translate("add_image", userSettings.language)}
+                {translate("add_new_gallery", userSettings.language)}
               </motion.button>
             </motion.div>
           )}
@@ -334,7 +337,7 @@ const ManageGallery = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                {translate("add_new_image", userSettings.language)}
+                {translate("add_new_gallery", userSettings.language)}
               </motion.button>
             </motion.div>
           )}

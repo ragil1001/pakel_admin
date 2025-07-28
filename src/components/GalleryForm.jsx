@@ -320,10 +320,10 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
         : translate("save", userSettings.language);
       const confirmResult = await Swal.fire({
         title: translate(
-          gallery ? "confirm_update_image" : "confirm_save_image",
+          gallery ? "confirm_update_gallery" : "confirm_save_gallery",
           userSettings.language
         ),
-        text: translate("confirm_image_action_text", userSettings.language, {
+        text: translate("confirm_gallery_action_text", userSettings.language, {
           action,
           name: formData.name,
         }),
@@ -368,7 +368,7 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
         onSave();
         toast.success(
           translate(
-            gallery ? "image_updated_success" : "image_saved_success",
+            gallery ? "gallery_updated_success" : "gallery_saved_success",
             userSettings.language
           ),
           {
@@ -394,13 +394,13 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
       } catch (error) {
         console.error("Failed to save Gallery:", error);
         setErrors({
-          general: translate("error_save_image", userSettings.language, {
+          general: translate("error_save_gallery", userSettings.language, {
             error: error.message,
           }),
         });
         Swal.fire({
           title: translate("error", userSettings.language),
-          text: translate("error_save_image", userSettings.language, {
+          text: translate("error_save_gallery", userSettings.language, {
             error: error.message,
           }),
           icon: "error",
@@ -460,13 +460,13 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
           </button>
           <h3 className="text-2xl font-bold text-white">
             {gallery
-              ? translate("edit_image", userSettings.language)
-              : translate("add_new_image", userSettings.language)}
+              ? translate("edit_gallery", userSettings.language)
+              : translate("add_new_gallery", userSettings.language)}
           </h3>
           <p className="text-emerald-100 mt-1">
             {gallery
-              ? translate("update_image_info", userSettings.language)
-              : translate("complete_image_info", userSettings.language)}
+              ? translate("update_gallery_info", userSettings.language)
+              : translate("complete_gallery_info", userSettings.language)}
           </p>
         </div>
         <div className="border-b border-gray-200 bg-gray-50 flex-shrink-0">
@@ -545,13 +545,13 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
                       )}
                     </div>
                     <InputField
-                      label={translate("image_name", userSettings.language)}
+                      label={translate("activity_name", userSettings.language)}
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
                       error={errors.name}
                       placeholder={translate(
-                        "image_name_placeholder",
+                        "activity_name_placeholder",
                         userSettings.language
                       )}
                     />
@@ -565,7 +565,7 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
                     type="textarea"
                     rows={4}
                     placeholder={translate(
-                      "image_description_placeholder",
+                      "description_placeholder",
                       userSettings.language
                     )}
                   />
@@ -644,7 +644,7 @@ const GalleryForm = ({ gallery, onSave, onCancel }) => {
                 </div>
               ) : (
                 translate(
-                  gallery ? "update_image" : "save_image",
+                  gallery ? "update_gallery" : "save_gallery",
                   userSettings.language
                 )
               )}
